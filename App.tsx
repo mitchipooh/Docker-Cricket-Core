@@ -1371,7 +1371,7 @@ const App: React.FC = () => {
                             onCreateUser={handleCreateUser}
                             mockGlobalUsers={globalUsers} // FIX: Pass global users for search
                         />
-                        />
+
                     )}
 
                     {activeTab === 'my_matches' && (
