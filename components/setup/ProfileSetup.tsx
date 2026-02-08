@@ -21,16 +21,16 @@ declare global {
 interface ProfileSetupProps {
   onComplete: (profile: UserProfile) => void;
   onCancel?: () => void;
-  initialMode?: 'CREATE' | 'LOGIN' | 'RECOVER';
+  existingProfile?: UserProfile;
 }
 
-export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, onCancel, initialMode = 'CREATE' }) => {
+export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, onCancel, initialMode = 'CREATE', existingProfile }) => {
   const [setupMode, setSetupMode] = useState<'CREATE' | 'LOGIN' | 'RECOVER'>(initialMode);
-  const [name, setName] = useState('');
-  const [handle, setHandle] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserProfile['role']>('Fan');
+  const [name, setName] = useState(existingProfile?.name || '');
+  const [handle, setHandle] = useState(existingProfile?.handle || '');
+  const [email, setEmail] = useState(existingProfile?.email || '');
+  const [password, setPassword] = useState(existingProfile?.password || '');
+  const [role, setRole] = useState<UserProfile['role']>(existingProfile?.role || 'Administrator');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,23 +42,23 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, onCancel
     : 'logo.jpg';
 
   // Scorer/Coach/Player specific states...
-  const [hourlyRate, setHourlyRate] = useState('');
-  const [experience, setExperience] = useState('');
-  const [bio, setBio] = useState('');
-  const [coachLevel, setCoachLevel] = useState('Level 1');
-  const [specialty, setSpecialty] = useState<any>('General');
-  const [battingStyle, setBattingStyle] = useState<any>('Right-hand');
-  const [bowlingStyle, setBowlingStyle] = useState('Right-arm Medium');
-  const [playerRole, setPlayerRole] = useState<any>('Batsman');
-  const [isHireable, setIsHireable] = useState(false);
+  const [hourlyRate, setHourlyRate] = useState(existingProfile?.scorerDetails?.hourlyRate?.toString() || '');
+  const [experience, setExperience] = useState(existingProfile?.scorerDetails?.experienceYears?.toString() || existingProfile?.coachDetails?.experienceYears?.toString() || '');
+  const [bio, setBio] = useState(existingProfile?.scorerDetails?.bio || '');
+  const [coachLevel, setCoachLevel] = useState(existingProfile?.coachDetails?.level || 'Level 1');
+  const [specialty, setSpecialty] = useState<any>(existingProfile?.coachDetails?.specialty || 'General');
+  const [battingStyle, setBattingStyle] = useState<any>(existingProfile?.playerDetails?.battingStyle || 'Right-hand');
+  const [bowlingStyle, setBowlingStyle] = useState(existingProfile?.playerDetails?.bowlingStyle || 'Right-arm Medium');
+  const [playerRole, setPlayerRole] = useState<any>(existingProfile?.playerDetails?.primaryRole || 'Batsman');
+  const [isHireable, setIsHireable] = useState(existingProfile?.playerDetails?.isHireable || existingProfile?.scorerDetails?.isHireable || false);
 
   // New Personalized Fields
-  const [nickname, setNickname] = useState('');
-  const [age, setAge] = useState('');
-  const [jerseyNumber, setJerseyNumber] = useState('');
-  const [favPlayer, setFavPlayer] = useState('');
-  const [favMoment, setFavMoment] = useState('');
-  const [favGround, setFavGround] = useState('');
+  const [nickname, setNickname] = useState(existingProfile?.playerDetails?.nickname || '');
+  const [age, setAge] = useState(existingProfile?.playerDetails?.age || '');
+  const [jerseyNumber, setJerseyNumber] = useState(existingProfile?.playerDetails?.jerseyNumber?.toString() || '');
+  const [favPlayer, setFavPlayer] = useState(existingProfile?.playerDetails?.favoritePlayer || '');
+  const [favMoment, setFavMoment] = useState(existingProfile?.playerDetails?.favoriteWorldCupMoment || '');
+  const [favGround, setFavGround] = useState(existingProfile?.playerDetails?.favoriteGround || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

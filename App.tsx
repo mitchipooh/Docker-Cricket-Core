@@ -1371,6 +1371,54 @@ const App: React.FC = () => {
                             onCreateUser={handleCreateUser}
                             mockGlobalUsers={globalUsers} // FIX: Pass global users for search
                         />
+                        />
+                    )}
+
+                    {activeTab === 'my_matches' && (
+                        <div className="max-w-4xl mx-auto p-4">
+                            <PlayerCareer profile={profile} onUpdateProfile={updateProfile} showCaptainHub={true} onOpenCaptainHub={() => setActiveTab('captain_hub')} />
+                        </div>
+                    )}
+
+                    {activeTab === 'my_tournaments' && (
+                        <div className="max-w-7xl mx-auto p-4">
+                            <OrganizationView organizations={orgs} onUpdateOrg={(id, d) => { setOrgs(orgs.map(o => o.id === id ? { ...o, ...d } : o)); forcePush(); }} viewingOrgId={null} onViewOrg={() => { }} onCreateOrg={handleCreateOrg} onDeleteOrg={() => { }} profile={profile} onAddTeam={handleAddTeam} onAddFixture={handleUpdateFixture} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} onAddTournament={(oid, t) => { setOrgs(orgs.map(o => o.id === oid ? { ...o, tournaments: [...o.tournaments, t] } : o)); forcePush(); }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} allTeams={allTeams} onProcessApplication={handleProcessApplication} onSendInvite={handleSendInvite} onRequestAffiliation={handleRequestAffiliation} />
+                        </div>
+                    )}
+
+                    {activeTab === 'profile' && (
+                        <ProfileSetup existingProfile={profile} onComplete={(p) => { updateProfile(p); setActiveTab('home'); }} onCancel={() => setActiveTab('home')} initialMode="CREATE" />
+                    )}
+
+                    {activeTab === 'my_teams' && (
+                        <div className="p-6">
+                            <h2 className="text-2xl font-black text-white mb-6">My Teams & Registry</h2>
+                            <TeamRegistry allTeams={allTeams} allOrganizations={orgs} onViewTeam={setViewingTeamId} onBack={() => setActiveTab('home')} />
+                        </div>
+                    )}
+
+                    {activeTab === 'my_clubs' && (
+                        <div className="max-w-7xl mx-auto p-4">
+                            <OrganizationView organizations={orgs.filter(o => profile.joinedClubIds?.includes(o.id))} onUpdateOrg={(id, d) => { setOrgs(orgs.map(o => o.id === id ? { ...o, ...d } : o)); forcePush(); }} viewingOrgId={null} onViewOrg={setViewingOrgId} onCreateOrg={handleCreateOrg} onDeleteOrg={() => { }} profile={profile} onAddTeam={handleAddTeam} onAddFixture={handleUpdateFixture} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} onAddTournament={(oid, t) => { setOrgs(orgs.map(o => o.id === oid ? { ...o, tournaments: [...o.tournaments, t] } : o)); forcePush(); }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} allTeams={allTeams} onProcessApplication={handleProcessApplication} onSendInvite={handleSendInvite} onRequestAffiliation={handleRequestAffiliation} />
+                        </div>
+                    )}
+
+                    {activeTab === 'create_tournament' && (
+                        <div className="max-w-7xl mx-auto p-4">
+                            <h2 className="text-2xl font-black text-indigo-400 mb-6 uppercase tracking-widest">Create Tournament</h2>
+                            <AdminCenter organizations={orgs} standaloneMatches={[]} userRole="Administrator" onStartMatch={() => { }} onViewMatch={() => { }} onRequestSetup={() => { }} onUpdateOrgs={setOrgs} onCreateOrg={handleCreateOrg} onAddTeam={handleAddTeam} onProcessApplication={handleProcessApplication} onRemoveTeam={() => { }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} allOrganizations={orgs} onBulkAddPlayers={() => { }} onAddGroup={() => { }} onUpdateGroupTeams={() => { }} onAddTournament={(oid, t) => { setOrgs(orgs.map(o => o.id === oid ? { ...o, tournaments: [...o.tournaments, t] } : o)); forcePush(); alert('Tournament Created!'); setActiveTab('my_tournaments'); }} mediaPosts={[]} onAddMediaPost={() => { }} onViewTeam={() => { }} onOpenMediaStudio={() => { }} following={{ teams: [], players: [], orgs: [] }} onToggleFollow={() => { }} hireableScorers={[]} currentUserId={profile.id} onApplyForOrg={handleApplyForOrg} currentUserProfile={profile} showCaptainHub={false} onOpenCaptainHub={() => { }} onRequestMatchReports={() => { }} onRequestTransferMarket={() => { }} onUpdateProfile={() => { }} issues={[]} onUpdateIssues={() => { }} onRequestAffiliation={() => { }} onViewOrg={() => { }} onCreateUser={() => { }} mockGlobalUsers={[]} activeTab="tournaments" />
+                        </div>
+                    )}
+
+                    {activeTab === 'register_club' && (
+                        <div className="max-w-7xl mx-auto p-4">
+                            <h2 className="text-2xl font-black text-indigo-400 mb-6 uppercase tracking-widest">Register New Club</h2>
+                            <AdminCenter organizations={orgs} standaloneMatches={[]} userRole="Administrator" onStartMatch={() => { }} onViewMatch={() => { }} onRequestSetup={() => { }} onUpdateOrgs={setOrgs} onCreateOrg={(o) => { handleCreateOrg(o); alert('Club Registered!'); setActiveTab('my_clubs'); }} onAddTeam={handleAddTeam} onProcessApplication={handleProcessApplication} onRemoveTeam={() => { }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} allOrganizations={orgs} onBulkAddPlayers={() => { }} onAddGroup={() => { }} onUpdateGroupTeams={() => { }} onAddTournament={() => { }} mediaPosts={[]} onAddMediaPost={() => { }} onViewTeam={() => { }} onOpenMediaStudio={() => { }} following={{ teams: [], players: [], orgs: [] }} onToggleFollow={() => { }} hireableScorers={[]} currentUserId={profile.id} onApplyForOrg={handleApplyForOrg} currentUserProfile={profile} showCaptainHub={false} onOpenCaptainHub={() => { }} onRequestMatchReports={() => { }} onRequestTransferMarket={() => { }} onUpdateProfile={() => { }} issues={[]} onUpdateIssues={() => { }} onRequestAffiliation={() => { }} onViewOrg={() => { }} onCreateUser={() => { }} mockGlobalUsers={[]} activeTab="organizations" />
+                        </div>
+                    )}
+
+                    {activeTab === 'following' && (
+                        <MediaCenter onBack={() => setActiveTab('home')} fixtures={allFixtures} teams={allTeams} players={allPlayers} mediaPosts={mediaPosts} onAddMediaPost={handleAddMediaPost} onUpdatePost={handleUpdateMediaPost} onDeletePost={handleDeleteMediaPost} following={following} onToggleFollow={toggleFollowing} onViewTeam={setViewingTeamId} onViewPlayer={(p) => setViewingPlayerId(p.id)} userRole={profile.role} currentProfile={profile} organizations={orgs} viewingOrgId={null} initialTab="following" />
                     )}
 
                     {activeTab === 'my_club' && myClubOrg && (
