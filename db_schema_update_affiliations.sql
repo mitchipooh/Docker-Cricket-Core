@@ -15,5 +15,9 @@ create table if not exists public.organization_affiliations (
 alter table public.organization_affiliations enable row level security;
 
 -- Policies
+drop policy if exists "Read Affiliations" on public.organization_affiliations;
 create policy "Read Affiliations" on public.organization_affiliations for select using (true);
+
+drop policy if exists "Upsert Affiliations" on public.organization_affiliations;
 create policy "Upsert Affiliations" on public.organization_affiliations for all using (true);
+

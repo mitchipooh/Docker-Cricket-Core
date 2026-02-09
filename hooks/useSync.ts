@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Organization, Team, MatchFixture, MediaPost, UserProfile } from '../types';
+import { Organization, Team, MatchFixture, MediaPost, UserProfile, GameIssue, MatchReportSubmission, UmpireMatchReport } from '../types';
 import { fetchGlobalSync, pushGlobalSync, pushUserData, fetchUserData } from '../services/centralZoneService';
 
 interface UseSyncProps {
@@ -10,6 +10,9 @@ interface UseSyncProps {
     allTeams: Team[];
     settings: any;
     following: any;
+    issues: any[];
+    matchReports: any[];
+    umpireReports: any[];
 
     setOrgsState: (val: Organization[]) => void;
     setMatchesState: (val: MatchFixture[]) => void;
@@ -17,6 +20,9 @@ interface UseSyncProps {
     setAllTeamsState: (val: Team[]) => void;
     setSettings: (val: any) => void;
     setFollowing: (val: any) => void;
+    setIssuesState: (val: any[]) => void;
+    setMatchReportsState: (val: any[]) => void;
+    setUmpireReportsState: (val: any[]) => void;
 }
 
 export const useSync = ({
@@ -27,12 +33,18 @@ export const useSync = ({
     allTeams,
     settings,
     following,
+    issues,
+    matchReports,
+    umpireReports,
     setOrgsState,
     setMatchesState,
     setPostsState,
     setAllTeamsState,
     setSettings,
-    setFollowing
+    setFollowing,
+    setIssuesState,
+    setMatchReportsState,
+    setUmpireReportsState
 }: UseSyncProps) => {
     const [isSyncing, setIsSyncing] = useState(false);
     const isSyncingRef = useRef(false);
@@ -55,7 +67,10 @@ export const useSync = ({
             console.log('📥 Cloud data received:', cloudData ? {
                 orgs: cloudData.orgs?.length,
                 teams: cloudData.allTeams?.length,
-                matches: cloudData.standaloneMatches?.length
+                matches: cloudData.standaloneMatches?.length,
+                issues: cloudData.issues?.length,
+                matchReports: cloudData.matchReports?.length,
+                umpireReports: cloudData.umpireReports?.length
             } : 'null');
 
             if (cloudData) {
@@ -64,13 +79,19 @@ export const useSync = ({
                 const matchesChanged = JSON.stringify(cloudData.standaloneMatches) !== JSON.stringify(standaloneMatches);
                 const postsChanged = JSON.stringify(cloudData.mediaPosts) !== JSON.stringify(mediaPosts);
                 const allTeamsChanged = JSON.stringify(cloudData.allTeams) !== JSON.stringify(allTeams);
+                const issuesChanged = JSON.stringify(cloudData.issues) !== JSON.stringify(issues);
+                const matchReportsChanged = JSON.stringify(cloudData.matchReports) !== JSON.stringify(matchReports);
+                const umpireReportsChanged = JSON.stringify(cloudData.umpireReports) !== JSON.stringify(umpireReports);
 
-                console.log('🔄 Applying changes:', { orgsChanged, matchesChanged, postsChanged, allTeamsChanged });
+                console.log('🔄 Applying changes:', { orgsChanged, matchesChanged, postsChanged, allTeamsChanged, issuesChanged, matchReportsChanged, umpireReportsChanged });
 
                 if (orgsChanged) setOrgsState(cloudData.orgs || []);
                 if (matchesChanged) setMatchesState(cloudData.standaloneMatches || []);
                 if (postsChanged) setPostsState(cloudData.mediaPosts || []);
                 if (allTeamsChanged) setAllTeamsState(cloudData.allTeams || []);
+                if (issuesChanged) setIssuesState(cloudData.issues || []);
+                if (matchReportsChanged) setMatchReportsState(cloudData.matchReports || []);
+                if (umpireReportsChanged) setUmpireReportsState(cloudData.umpireReports || []);
             } else {
                 console.log('⚠️ No cloud data to sync');
             }
@@ -100,7 +121,7 @@ export const useSync = ({
         const userId = profile?.googleId || (profile?.role !== 'Guest' ? profile?.id : undefined);
 
         try {
-            const success = await pushGlobalSync({ orgs, standaloneMatches, mediaPosts }, userId);
+            const success = await pushGlobalSync({ orgs, standaloneMatches, mediaPosts, issues, matchReports, umpireReports }, userId);
 
             if (success) {
                 if (profile && profile.role !== 'Guest') {
@@ -120,7 +141,7 @@ export const useSync = ({
             isSyncingRef.current = false;
             setIsSyncing(false);
         }
-    }, [orgs, standaloneMatches, mediaPosts, profile, settings, following]);
+    }, [orgs, standaloneMatches, mediaPosts, issues, matchReports, umpireReports, profile, settings, following]);
 
     // Initial Pull & Heartbeat
     useEffect(() => {
@@ -151,7 +172,7 @@ export const useSync = ({
             performPush();
         }, 1000); // 1s debounce
         return () => clearTimeout(timer);
-    }, [orgs, standaloneMatches, mediaPosts, profile, settings, following, performPush]);
+    }, [orgs, standaloneMatches, mediaPosts, issues, matchReports, umpireReports, profile, settings, following, performPush]);
 
     const markDirty = () => {
         dirtyRef.current = true;

@@ -23,53 +23,38 @@ export const MainPad: React.FC<ScoringPadProps> = ({
                 </div>
             )}
 
-            <div className={`grid grid-cols-4 gap-1.5 h-full w-full ${compact ? 'grid-rows-[1fr_1fr_1fr_1fr]' : 'grid-rows-[1fr_1.25fr_1fr]'}`}>
-                {/* Row 1: Singles/Dots */}
-                <button onClick={() => onRun(0)} disabled={readOnly} className={btnClass("col-span-1 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-400 rounded-lg text-xl font-black transition-all active:scale-95 shadow-sm border border-slate-700 flex items-center justify-center")}>0</button>
-                <button onClick={() => onRun(1)} disabled={readOnly} className={btnClass("col-span-1 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white rounded-lg text-xl font-black transition-all active:scale-95 shadow-sm border border-slate-700 flex items-center justify-center")}>1</button>
-                <button onClick={() => onRun(2)} disabled={readOnly} className={btnClass("col-span-1 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white rounded-lg text-xl font-black transition-all active:scale-95 shadow-sm border border-slate-700 flex items-center justify-center")}>2</button>
-                <button onClick={() => onRun(3)} disabled={readOnly} className={btnClass("col-span-1 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white rounded-lg text-xl font-black transition-all active:scale-95 shadow-sm border border-slate-700 flex items-center justify-center")}>3</button>
+            <div className="flex flex-col gap-1.5 h-full w-full p-2 bg-slate-50">
+                {/* Row 1: Singles/Dots - Desktop Optimized (shorter) */}
+                <div className="grid grid-cols-4 gap-1.5 h-14">
+                    <button onClick={() => onRun(0)} disabled={readOnly} className={btnClass("bg-white hover:bg-slate-50 text-slate-900 text-xl font-black rounded-lg shadow-sm border border-slate-200 flex items-center justify-center")}>0</button>
+                    <button onClick={() => onRun(1)} disabled={readOnly} className={btnClass("bg-white hover:bg-slate-50 text-slate-900 text-xl font-black rounded-lg shadow-sm border border-slate-200 flex items-center justify-center")}>1</button>
+                    <button onClick={() => onRun(2)} disabled={readOnly} className={btnClass("bg-white hover:bg-slate-50 text-slate-900 text-xl font-black rounded-lg shadow-sm border border-slate-200 flex items-center justify-center")}>2</button>
+                    <button onClick={() => onRun(3)} disabled={readOnly} className={btnClass("bg-white hover:bg-slate-50 text-slate-900 text-xl font-black rounded-lg shadow-sm border border-slate-200 flex items-center justify-center")}>3</button>
+                </div>
 
-                {/* Row 2: Boundaries */}
-                <button onClick={() => onRun(4)} disabled={readOnly} className={btnClass("col-span-2 bg-gradient-to-br from-indigo-600 to-indigo-800 hover:to-indigo-700 text-white rounded-xl transition-all active:scale-95 shadow-lg shadow-indigo-900/40 border border-indigo-500/30 flex flex-col items-center justify-center group relative overflow-hidden")}>
-                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <span className={`${compact ? 'text-2xl' : 'text-4xl'} font-black relative z-10`}>4</span>
-                    {!compact && <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-80 relative z-10">Boundary</span>}
-                </button>
-                <button onClick={() => onRun(6)} disabled={readOnly} className={btnClass("col-span-2 bg-gradient-to-br from-emerald-600 to-emerald-800 hover:to-emerald-700 text-white rounded-xl transition-all active:scale-95 shadow-lg shadow-emerald-900/40 border border-emerald-500/30 flex flex-col items-center justify-center group relative overflow-hidden")}>
-                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <span className={`${compact ? 'text-2xl' : 'text-4xl'} font-black relative z-10`}>6</span>
-                    {!compact && <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-80 relative z-10">Maximum</span>}
-                </button>
+                {/* Row 2: Boundaries - Desktop Optimized (shorter) */}
+                <div className="grid grid-cols-2 gap-1.5 h-20">
+                    <button onClick={() => onRun(4)} disabled={readOnly} className={btnClass("bg-indigo-600 hover:bg-indigo-700 text-white text-4xl font-black rounded-xl shadow-md flex items-center justify-center")}>4</button>
+                    <button onClick={() => onRun(6)} disabled={readOnly} className={btnClass("bg-emerald-600 hover:bg-emerald-700 text-white text-4xl font-black rounded-xl shadow-md flex items-center justify-center")}>6</button>
+                </div>
 
-                {/* Row 3: Extras */}
-                <button onClick={() => onNav('extras')} disabled={readOnly} className={btnClass("col-span-2 bg-amber-700/80 hover:bg-amber-600 text-white rounded-lg text-base font-black transition-all active:scale-95 shadow-md shadow-amber-900/30 border border-amber-500/30 flex flex-col items-center justify-center")}>
-                    {compact ? 'Extras' : 'WD / NB / B / LB'}
-                    {!compact && <span className="text-[7px] font-bold opacity-70 uppercase tracking-widest mt-0.5">Extras Menu</span>}
-                </button>
+                {/* Row 3: Actions - Desktop Optimized (shorter) */}
+                <div className="grid grid-cols-3 gap-1.5 h-14">
+                    <button onClick={() => onNav('extras')} disabled={readOnly} className={btnClass("bg-amber-600 hover:bg-amber-700 text-white text-sm font-black rounded-lg shadow-sm flex items-center justify-center uppercase")}>EX</button>
+                    <button onClick={() => onStartWicket(striker?.id)} disabled={readOnly} className={btnClass("bg-red-600 hover:bg-red-700 text-white text-sm font-black rounded-lg shadow-sm flex items-center justify-center uppercase")}>OUT</button>
 
-                {/* Wicket/Events */}
-                <div className="col-span-2 grid grid-cols-2 gap-1.5">
-                    <button
-                        onClick={() => onStartWicket(striker?.id)}
-                        disabled={readOnly}
-                        className={btnClass("col-span-1 bg-red-700 hover:bg-red-600 text-white rounded-lg text-base font-black transition-all active:scale-95 shadow-md shadow-red-900/30 border border-red-500/30 flex flex-col items-center justify-center")}
-                    >
-                        OUT
-                    </button>
-                    <div className="col-span-1 grid grid-rows-2 gap-1.5">
+                    <div className="grid grid-rows-2 gap-1">
                         <button
                             onClick={() => { if (onAnalyticsClick) onAnalyticsClick(); }}
-                            className={btnClass("bg-slate-700 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-md text-[10px] font-black transition-all active:scale-95 border border-slate-600 flex items-center justify-center")}
-                            title="Shot Map"
+                            className={btnClass("bg-slate-100 hover:bg-slate-200 text-slate-900 text-[10px] font-black rounded-md border border-slate-200 flex items-center justify-center gap-1")}
                         >
-                            📍 {compact ? '' : 'Map'}
+                            <span>📍</span> MAP
                         </button>
                         <button
                             onClick={() => onNav('events')}
-                            className="bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-md text-base font-black transition-all active:scale-95 border border-slate-700 flex items-center justify-center"
+                            className={btnClass("bg-slate-100 hover:bg-slate-200 text-slate-900 text-[10px] font-black rounded-md border border-slate-200 flex items-center justify-center")}
                         >
-                            •••
+                            MORE
                         </button>
                     </div>
                 </div>
@@ -77,4 +62,3 @@ export const MainPad: React.FC<ScoringPadProps> = ({
         </div>
     );
 };
-

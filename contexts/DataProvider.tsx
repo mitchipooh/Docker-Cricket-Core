@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Organization, MatchFixture, MediaPost, UserProfile, Team } from '../types';
+import { Organization, MatchFixture, MediaPost, UserProfile, Team, GameIssue, MatchReportSubmission, UmpireMatchReport } from '../types';
 import { useSync } from '../hooks/useSync';
+import { DEMO_ORGS, DEMO_MATCHES, DEMO_POSTS, DEMO_TEAMS } from '../utils/demoData';
 
 interface DataContextType {
     orgs: Organization[];
@@ -8,12 +9,15 @@ interface DataContextType {
     mediaPosts: MediaPost[];
     allTeams: Team[];
     profile: UserProfile | null;
-    settings: { notifications: boolean; sound: boolean; devMode?: boolean; fullScreen?: boolean };
+    settings: { notifications: boolean; sound: boolean; devMode?: boolean; fullScreen?: boolean; demoMode?: boolean };
     following: { teams: string[], players: string[], orgs: string[] };
+    issues: GameIssue[];
+    matchReports: MatchReportSubmission[];
+    umpireReports: UmpireMatchReport[];
 
     // Actions
-    updateProfile: (p: UserProfile) => void;
-    updateSettings: (s: { notifications: boolean; sound: boolean; devMode?: boolean; fullScreen?: boolean }) => void;
+    updateProfile: (p: Partial<UserProfile>) => void;
+    updateSettings: (s: { notifications: boolean; sound: boolean; devMode?: boolean; fullScreen?: boolean; demoMode?: boolean }) => void;
     updateFollowing: (f: { teams: string[], players: string[], orgs: string[] }) => void;
 
     // Data Mutations (Automatically triggers sync)
@@ -21,6 +25,9 @@ interface DataContextType {
     setStandaloneMatches: (matches: MatchFixture[]) => void;
     setMediaPosts: (posts: MediaPost[]) => void;
     setAllTeams: (teams: Team[]) => void;
+    setIssues: (issues: GameIssue[]) => void;
+    setMatchReports: (reports: MatchReportSubmission[]) => void;
+    setUmpireReports: (reports: UmpireMatchReport[]) => void;
 
     // Sync trigger
     pullNow: () => Promise<void>;
@@ -62,11 +69,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     const [settings, setSettings] = useState(() => {
-        try { const saved = localStorage.getItem('cc_settings'); return saved ? JSON.parse(saved) : { notifications: false, sound: true, devMode: false, fullScreen: false }; } catch { return { notifications: false, sound: true, devMode: false, fullScreen: false }; }
+        try { const saved = localStorage.getItem('cc_settings'); return saved ? JSON.parse(saved) : { notifications: false, sound: true, devMode: false, fullScreen: false, demoMode: false }; } catch { return { notifications: false, sound: true, devMode: false, fullScreen: false, demoMode: false }; }
     });
 
     const [following, setFollowing] = useState(() => {
         try { const saved = localStorage.getItem('cc_following'); return saved ? JSON.parse(saved) : { teams: [], players: [], orgs: [] }; } catch { return { teams: [], players: [], orgs: [] }; }
+    });
+
+    const [issues, setIssuesState] = useState<GameIssue[]>(() => {
+        try { const saved = localStorage.getItem('cc_issues'); return saved ? JSON.parse(saved) : []; } catch { return []; }
+    });
+    const [matchReports, setMatchReportsState] = useState<MatchReportSubmission[]>(() => {
+        try { const saved = localStorage.getItem('cc_match_reports'); return saved ? JSON.parse(saved) : []; } catch { return []; }
+    });
+    const [umpireReports, setUmpireReportsState] = useState<UmpireMatchReport[]>(() => {
+        try { const saved = localStorage.getItem('cc_umpire_reports'); return saved ? JSON.parse(saved) : []; } catch { return []; }
     });
 
     // --- PERSISTENCE EFFECT ---
@@ -81,6 +98,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => { localStorage.setItem('cc_matches', JSON.stringify(standaloneMatches)); }, [standaloneMatches]);
     useEffect(() => { localStorage.setItem('cc_posts', JSON.stringify(mediaPosts)); }, [mediaPosts]);
     useEffect(() => { localStorage.setItem('cc_all_teams', JSON.stringify(allTeams)); }, [allTeams]);
+    useEffect(() => { localStorage.setItem('cc_issues', JSON.stringify(issues)); }, [issues]);
+    useEffect(() => { localStorage.setItem('cc_match_reports', JSON.stringify(matchReports)); }, [matchReports]);
+    useEffect(() => { localStorage.setItem('cc_umpire_reports', JSON.stringify(umpireReports)); }, [umpireReports]);
 
     // --- SYNC HOOK ---
     const { isSyncing, pullNow, pushNow, markDirty } = useSync({
@@ -91,12 +111,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         allTeams,
         settings,
         following,
+        issues,
+        matchReports,
+        umpireReports,
         setOrgsState,
         setMatchesState,
         setPostsState,
         setAllTeamsState,
         setSettings,
-        setFollowing
+        setFollowing,
+        setIssuesState,
+        setMatchReportsState,
+        setUmpireReportsState
     });
 
     // --- SETTERS (Wrap to mark dirty) ---
@@ -121,8 +147,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // but if we allow creating teams globally later, we might.
     };
 
-    const updateProfile = (p: UserProfile) => {
-        setProfile(p);
+    const setIssues = (newIssues: GameIssue[]) => {
+        setIssuesState(newIssues);
+        markDirty();
+    };
+
+    const setMatchReports = (newReports: MatchReportSubmission[]) => {
+        setMatchReportsState(newReports);
+        markDirty();
+    };
+
+    const setUmpireReports = (newReports: UmpireMatchReport[]) => {
+        setUmpireReportsState(newReports);
+        markDirty();
+    };
+
+    const updateProfile = (p: Partial<UserProfile>) => {
+        if (!profile) return;
+        setProfile({ ...profile, ...p });
         markDirty();
     };
 
@@ -136,10 +178,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         markDirty();
     };
 
+    // --- DEMO MODE MERGING ---
+    const displayOrgs = settings.demoMode ? [...orgs, ...DEMO_ORGS] : orgs;
+    const displayMatches = settings.demoMode ? [...standaloneMatches, ...DEMO_MATCHES] : standaloneMatches;
+    const displayPosts = settings.demoMode ? [...mediaPosts, ...DEMO_POSTS] : mediaPosts;
+    const displayTeams = settings.demoMode ? [...allTeams, ...DEMO_TEAMS] : allTeams;
+
     return (
         <DataContext.Provider value={{
-            orgs, standaloneMatches, mediaPosts, allTeams, profile, settings, following,
+            orgs: displayOrgs,
+            standaloneMatches: displayMatches,
+            mediaPosts: displayPosts,
+            allTeams: displayTeams,
+            profile, settings, following,
+            issues, matchReports, umpireReports,
             setOrgs, setStandaloneMatches, setMediaPosts, setAllTeams,
+            setIssues, setMatchReports, setUmpireReports,
             updateProfile, updateSettings, updateFollowing,
             pullNow, forcePush: pushNow, isSyncing,
             setOrgsSilent: setOrgsState,

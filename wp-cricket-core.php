@@ -46,6 +46,21 @@ class CricketCoreBridge {
         add_action( 'admin_post_cc_sync_sportspress', array( $this, 'sync_sportspress_backend' ) );
     }
 
+    private function get_latest_asset( $extension ) {
+        $path = plugin_dir_path( __FILE__ ) . 'dist/assets/';
+        if ( ! is_dir( $path ) ) return '';
+        
+        $files = glob( $path . '*.' . $extension );
+        if ( ! $files ) return '';
+        
+        // Sort by modified time to get the latest (optional, but good)
+        usort( $files, function( $a, $b ) {
+            return filemtime( $b ) - filemtime( $a );
+        });
+        
+        return 'dist/assets/' . basename( $files[0] );
+    }
+
     // --- STANDALONE APP ROUTING ---
 
     public function add_standalone_rewrite() {
@@ -60,8 +75,11 @@ class CricketCoreBridge {
     public function render_standalone_interface() {
         if ( get_query_var( 'cc_standalone' ) ) {
             $plugin_url = plugins_url( 'dist/', __FILE__ );
-            $js_url = plugins_url( 'dist/cricket-core.js', __FILE__ );
-            $css_url = plugins_url( 'dist/cricket-core.css', __FILE__ );
+            $js_file = $this->get_latest_asset('js');
+            $css_file = $this->get_latest_asset('css');
+            
+            $js_url = plugins_url( $js_file, __FILE__ );
+            $css_url = plugins_url( $css_file, __FILE__ );
             $manifest_url = plugins_url( 'dist/manifest.json', __FILE__ );
             
             $api_settings = array(
@@ -181,8 +199,12 @@ class CricketCoreBridge {
     public function register_assets() {
         wp_enqueue_style( 'cricket-core-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap', array(), null );
         wp_register_script( 'tailwind-cdn', 'https://cdn.tailwindcss.com', array(), '3.4.17', false );
-        wp_register_script( 'cricket-core-js', plugins_url( 'dist/cricket-core.js', __FILE__ ), array(), '2.4.0', true );
-        wp_register_style( 'cricket-core-css', plugins_url( 'dist/cricket-core.css', __FILE__ ), array(), '2.4.0' );
+        
+        $js_file = $this->get_latest_asset('js');
+        $css_file = $this->get_latest_asset('css');
+        
+        wp_register_script( 'cricket-core-js', plugins_url( $js_file, __FILE__ ), array(), '2.4.0', true );
+        wp_register_style( 'cricket-core-css', plugins_url( $css_file, __FILE__ ), array(), '2.4.0' );
 
         wp_localize_script( 'cricket-core-js', 'wpApiSettings', array(
             'root' => esc_url_raw( rest_url() ),

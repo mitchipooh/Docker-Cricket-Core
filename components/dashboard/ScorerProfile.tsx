@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UserProfile, MatchFixture } from '../../types';
 
@@ -6,178 +5,176 @@ interface ScorerProfileProps {
     profile: UserProfile;
     onUpdateProfile: (updates: Partial<UserProfile>) => void;
     fixtures: MatchFixture[];
+    onAcceptFixture: (fixtureId: string) => void;
+    onBack?: () => void;
 }
 
-export const ScorerProfile: React.FC<ScorerProfileProps> = ({ profile, onUpdateProfile, fixtures }) => {
+export const ScorerProfile: React.FC<ScorerProfileProps> = ({ profile, onUpdateProfile, fixtures, onAcceptFixture, onBack }) => {
     const details = profile.scorerDetails || { isHireable: false, hourlyRate: 0, experienceYears: 0, bio: '' };
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState(details);
+    const [activeTab, setActiveTab] = useState<'MY_GAMES' | 'AVAILABLE'>('MY_GAMES');
 
-    // Filter fixtures to only those scored by this user
-    const scoutedGames = fixtures.filter(f => f.scorerId === profile.id);
+    // Filter fixtures
+    const scoutedGames = fixtures.filter(f => f && f.scorerId === profile.id);
+    const availableFixtures = fixtures.filter(f =>
+        f && !f.scorerId && f.status !== 'Completed' && (new Date(f.date).getTime() > Date.now() - 86400000)
+    );
 
     const handleSave = () => {
-        onUpdateProfile({
-            scorerDetails: editForm
-        });
+        onUpdateProfile({ scorerDetails: editForm });
         setIsEditing(false);
     };
 
+    const formatDate = (dateStr: string) => {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    };
+
+    const formatTime = (dateStr: string) => {
+        const d = new Date(dateStr);
+        return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    };
+
     return (
-        <div className="animate-in slide-in-from-bottom-8 space-y-8">
-            {/* Header / Hero Section */}
-            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-[2.5rem] p-8 md:p-12 border border-slate-800 relative overflow-hidden shadow-2xl">
-                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
-                    <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-[2.5rem] flex items-center justify-center text-6xl font-black text-slate-900 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
-                        {profile.name.charAt(0)}
-                    </div>
-                    <div className="text-center md:text-left flex-1">
-                        <div className="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-300 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-indigo-500/30">
-                            Professional Scorer
+        <div className="animate-in slide-in-from-bottom-8 min-h-screen bg-slate-50 pb-20">
+            {/* Collapsed Header / Top Bar */}
+            <div className="bg-slate-900 text-white p-4 sticky top-0 z-30 shadow-md">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center font-black text-sm">
+                            {profile.name.charAt(0)}
                         </div>
-                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-2">{profile.name}</h1>
-                        <p className="text-slate-400 font-bold text-lg">@{profile.handle}</p>
-
-                        <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-4">
-                            <button
-                                onClick={() => onUpdateProfile({ scorerDetails: { ...details, isHireable: !details.isHireable } })}
-                                className={`px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all ${details.isHireable ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/20' : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'}`}
-                            >
-                                {details.isHireable ? '✅ Available for Hire' : '❌ Not for Hire'}
-                            </button>
-                            <button
-                                onClick={() => setIsEditing(!isEditing)}
-                                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all border border-white/10 backdrop-blur-md"
-                            >
-                                {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {/* Decorative background */}
-                <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-9xl text-white font-black pointer-events-none select-none">SCORER</div>
-            </div>
-
-            {isEditing && (
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl animate-in zoom-in-95 duration-300">
-                    <h3 className="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3">
-                        <span className="w-2 h-8 bg-indigo-600 rounded-full"></span>
-                        Edit Career Details
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Hourly Rate ($)</label>
-                            <input
-                                type="number"
-                                value={editForm.hourlyRate}
-                                onChange={(e) => setEditForm({ ...editForm, hourlyRate: Number(e.target.value) })}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none focus:ring-2 ring-indigo-500/20"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Experience (Years)</label>
-                            <input
-                                type="number"
-                                value={editForm.experienceYears}
-                                onChange={(e) => setEditForm({ ...editForm, experienceYears: Number(e.target.value) })}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none focus:ring-2 ring-indigo-500/20"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Hireable Status</label>
-                            <div className="flex bg-slate-50 p-1 rounded-2xl border border-slate-200 h-[60px]">
-                                <button
-                                    onClick={() => setEditForm({ ...editForm, isHireable: true })}
-                                    className={`flex-1 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editForm.isHireable ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    Public
+                        <div>
+                            <h1 className="font-bold text-lg leading-tight">{profile.name}</h1>
+                            {onBack && (
+                                <button onClick={onBack} className="text-[10px] text-indigo-300 uppercase tracking-widest hover:text-white">
+                                    ← Dashboard
                                 </button>
-                                <button
-                                    onClick={() => setEditForm({ ...editForm, isHireable: false })}
-                                    className={`flex-1 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!editForm.isHireable ? 'bg-white text-slate-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
-                                >
-                                    Private
-                                </button>
-                            </div>
+                            )}
                         </div>
-                    </div>
-                    <div className="space-y-2 mb-8">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Professional Bio</label>
-                        <textarea
-                            value={editForm.bio}
-                            onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                            placeholder="Tell leagues about your scoring experience, certifications, and reliability..."
-                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none focus:ring-2 ring-indigo-500/20 min-h-[120px] resize-none"
-                        />
                     </div>
                     <button
-                        onClick={handleSave}
-                        className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-indigo-200 hover:bg-indigo-500 transition-all"
+                        onClick={() => setIsEditing(!isEditing)}
+                        className="text-[10px] bg-white/10 px-3 py-1.5 rounded-full font-bold uppercase tracking-wider hover:bg-white/20"
                     >
-                        Save Career Profile
+                        {isEditing ? 'Cancel' : 'Edit'}
                     </button>
+                </div>
+            </div>
+
+            {/* Editing Form (Overlay) */}
+            {isEditing && (
+                <div className="bg-white p-6 m-4 rounded-[2rem] shadow-xl border border-slate-200 animate-in zoom-in-95">
+                    <h3 className="text-xl font-black text-slate-900 mb-6">Edit Profile</h3>
+                    {/* ... (Keep editing fields concise) ... */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hourly Rate ($)</label>
+                            <input type="number" value={editForm.hourlyRate} onChange={(e) => setEditForm({ ...editForm, hourlyRate: Number(e.target.value) })} className="w-full bg-slate-50 border rounded-xl px-4 py-2 mt-1" />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Experience (Years)</label>
+                            <input type="number" value={editForm.experienceYears} onChange={(e) => setEditForm({ ...editForm, experienceYears: Number(e.target.value) })} className="w-full bg-slate-50 border rounded-xl px-4 py-2 mt-1" />
+                        </div>
+                        <button onClick={handleSave} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-black uppercase text-xs tracking-widest mt-4">Save</button>
+                    </div>
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Stats Cards */}
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform duration-500">
-                    <div className="text-5xl font-black text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">{scoutedGames.length}</div>
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Games Scored</div>
-                </div>
-
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform duration-500">
-                    <div className="text-5xl font-black text-slate-900 mb-2 group-hover:text-emerald-500 transition-colors">${details.hourlyRate}</div>
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Booking Rate / Hour</div>
-                </div>
-
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center group hover:scale-105 transition-transform duration-500">
-                    <div className="text-5xl font-black text-slate-900 mb-2 group-hover:text-purple-500 transition-colors">{details.experienceYears}</div>
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Years Experience</div>
+            {/* Menu / Tabs - Collapsed to Top */}
+            <div className="px-4 py-4">
+                <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
+                    <button
+                        onClick={() => setActiveTab('MY_GAMES')}
+                        className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'MY_GAMES' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        Assignments
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('AVAILABLE')}
+                        className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'AVAILABLE' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        Find Work ({availableFixtures.length})
+                    </button>
                 </div>
             </div>
 
-            <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between mb-10">
-                    <h3 className="text-2xl font-black text-slate-900">Scoring History</h3>
-                    <span className="bg-slate-100 text-slate-500 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200">Official Records Only</span>
-                </div>
+            {/* Fixture List - Modern Table Look */}
+            <div className="px-4 space-y-3">
+                {activeTab === 'MY_GAMES' && (
+                    scoutedGames.length > 0 ? (
+                        scoutedGames.map(game => (
+                            <div key={game.id} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex items-center justify-between gap-3">
+                                {/* Left: Date/Time */}
+                                <div className="flex flex-col items-center justify-center w-14 shrink-0 border-r border-slate-100 pr-3">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase">{formatDate(game.date).split(' ')[0]}</span>
+                                    <span className="text-lg font-black text-indigo-600 leading-none">{formatDate(game.date).split(' ')[1]}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 mt-1">{formatTime(game.date)}</span>
+                                </div>
 
-                {scoutedGames.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4">
-                        {scoutedGames.map(game => (
-                            <div key={game.id} className="group bg-slate-50 border border-slate-100 p-6 rounded-3xl hover:bg-white hover:border-indigo-200 hover:shadow-xl transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-2xl font-black text-slate-400 group-hover:text-indigo-600 transition-colors shadow-sm">
-                                        🏏
+                                {/* Center: Match Info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex flex-col gap-0.5">
+                                        <div className="font-bold text-slate-900 text-sm truncate">{game.teamAName}</div>
+                                        <div className="text-[9px] font-black text-slate-300 uppercase">VS</div>
+                                        <div className="font-bold text-slate-900 text-sm truncate">{game.teamBName}</div>
                                     </div>
-                                    <div>
-                                        <div className="font-black text-lg text-slate-900 mb-1">{game.teamAName} vs {game.teamBName}</div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{game.venue}</span>
-                                            <span className="text-slate-300">•</span>
-                                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{new Date(game.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                    <div className="flex items-center gap-1 mt-1.5 text-[10px] font-medium text-slate-500">
+                                        <span>📍</span> <span className="truncate">{game.venue}</span>
+                                    </div>
+                                </div>
+
+                                {/* Right: Status Badge */}
+                                <div className="shrink-0">
+                                    <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase ${game.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                                        {game.status === 'Completed' ? 'Done' : 'Active'}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center p-8 text-slate-400 text-xs font-bold uppercase tracking-widest">No assigned games</div>
+                    )
+                )}
+
+                {activeTab === 'AVAILABLE' && (
+                    availableFixtures.length > 0 ? (
+                        availableFixtures.map(game => (
+                            <div key={game.id} className="bg-white rounded-xl p-0 shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row">
+                                <div className="p-4 flex items-center gap-4">
+                                    {/* Left: Date/Time Block */}
+                                    <div className="flex flex-col items-center justify-center w-14 shrink-0 border-r border-slate-100 pr-4">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase">{formatDate(game.date).split(' ')[0]}</span>
+                                        <span className="text-xl font-black text-indigo-600 leading-none">{formatDate(game.date).split(' ')[1]}</span>
+                                        <span className="text-[9px] font-bold text-slate-400 mt-1">{formatTime(game.date)}</span>
+                                    </div>
+
+                                    {/* Center: Teams & Venue */}
+                                    <div className="flex-1 min-w-0 flex flex-col gap-1">
+                                        <div className="font-bold text-slate-900 text-base leading-tight break-words">{game.teamAName}</div>
+                                        <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest">VS</div>
+                                        <div className="font-bold text-slate-900 text-base leading-tight break-words">{game.teamBName}</div>
+
+                                        <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-500 font-medium">
+                                            <span>📍</span> {game.venue}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="text-right hidden md:block">
-                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Result</div>
-                                        <div className="text-sm font-black text-slate-900">{game.result || 'Match Completed'}</div>
-                                    </div>
-                                    <div className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all cursor-default">
-                                        Verified ✓
-                                    </div>
-                                </div>
+
+                                {/* Bottom: Action Button (Full Width on Mobile) */}
+                                <button
+                                    onClick={() => onAcceptFixture(game.id)}
+                                    className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black uppercase text-[10px] tracking-widest py-3 border-t border-indigo-100 flex items-center justify-center gap-2"
+                                >
+                                    <span>Accept Match</span>
+                                    <span>→</span>
+                                </button>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-20 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">
-                        <div className="text-5xl mb-4 grayscale opacity-50">📂</div>
-                        <h4 className="text-xl font-black text-slate-900 mb-2">No Verified Records</h4>
-                        <p className="text-slate-400 font-bold max-w-sm mx-auto">Complete Match Day assignments to build your professional scoring history.</p>
-                    </div>
+                        ))
+                    ) : (
+                        <div className="text-center p-8 text-slate-400 text-xs font-bold uppercase tracking-widest">No available games found</div>
+                    )
                 )}
             </div>
         </div>

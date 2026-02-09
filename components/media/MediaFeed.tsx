@@ -80,6 +80,25 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
       onUpdatePost({ ...post, likes: newLikes, dislikes: newDislikes });
    };
 
+   const handleReaction = (postId: string, emoji: string) => {
+      if (!currentUser || !onUpdatePost) return;
+      const post = mediaPosts.find(p => p.id === postId);
+      if (!post) return;
+
+      const reactions = post.reactions || {};
+      const currentRes = reactions[emoji] || [];
+      let nextRes = [...currentRes];
+
+      if (nextRes.includes(currentUser.id)) {
+         nextRes = nextRes.filter(id => id !== currentUser.id);
+      } else {
+         nextRes.push(currentUser.id);
+      }
+
+      const nextReactions = { ...reactions, [emoji]: nextRes };
+      onUpdatePost({ ...post, reactions: nextReactions });
+   };
+
    const handleShare = (post: MediaPost) => {
       if (navigator.share) {
          navigator.share({
@@ -249,10 +268,26 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
                               {post.contentUrl && post.type === 'VIDEO' && <video src={post.contentUrl} controls className="w-full max-h-[500px] bg-black" />}
                               <div className="p-4">
                                  <p className="text-sm text-slate-700 leading-relaxed">{post.caption}</p>
-                                 <div className="flex gap-4 mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                    <button onClick={() => handleLike(post.id)} className={`hover:text-indigo-600 transition-colors ${post.likes?.includes(currentUser?.id || '') ? 'text-red-500' : ''}`}>❤️ {post.likes?.length || 0}</button>
-                                    <button onClick={() => handleLike(post.id, true)} className={`hover:text-indigo-600 transition-colors ${post.dislikes?.includes(currentUser?.id || '') ? 'text-indigo-600' : ''}`}>👎 {post.dislikes?.length || 0}</button>
-                                    <button onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)} className="hover:text-indigo-600 transition-colors">💬 {post.comments.length}</button>
+                                 <div className="flex flex-wrap gap-4 mt-4 items-center border-t border-slate-50 pt-4">
+                                    <div className="flex gap-2">
+                                       {['🔥', '👏', '🏏', '❤️'].map(emoji => {
+                                          const count = post.reactions?.[emoji]?.length || 0;
+                                          const isActive = post.reactions?.[emoji]?.includes(currentUser?.id || '');
+                                          return (
+                                             <button
+                                                key={emoji}
+                                                onClick={() => handleReaction(post.id, emoji)}
+                                                className={`hover:scale-110 transition-transform px-2 py-1 rounded-full text-xs font-black flex items-center gap-1.5 ${isActive ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' : 'bg-slate-50 text-slate-400'}`}
+                                             >
+                                                <span>{emoji}</span>
+                                                {count > 0 && <span>{count}</span>}
+                                             </button>
+                                          );
+                                       })}
+                                    </div>
+                                    <button onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)} className="ml-auto hover:text-indigo-600 transition-colors text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                                       💬 {post.comments.length}
+                                    </button>
                                  </div>
                               </div>
                            </div>
@@ -500,22 +535,30 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
                                     </p>
                                  )}
 
-                                 <div className="flex items-center gap-8 border-t border-slate-50 pt-5">
-                                    <button onClick={() => handleLike(post.id)} className={`flex items-center gap-2 group transition-all ${post.likes?.includes(currentUser?.id || '') ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}>
-                                       <span className="text-xl group-hover:scale-125 transition-transform">{post.likes?.includes(currentUser?.id || '') ? '❤️' : '🤍'}</span>
-                                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{post.likes?.length || 0}</span>
-                                    </button>
-                                    <button onClick={() => handleLike(post.id, true)} className={`flex items-center gap-2 group transition-all ${post.dislikes?.includes(currentUser?.id || '') ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}>
-                                       <span className="text-xl group-hover:scale-125 transition-transform">👎</span>
-                                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{post.dislikes?.length || 0}</span>
-                                    </button>
-                                    <button onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)} className="flex items-center gap-2 group transition-all">
+                                 <div className="flex flex-wrap items-center gap-4 border-t border-slate-50 pt-5">
+                                    <div className="flex gap-2">
+                                       {['🔥', '👏', '🏏', '❤️'].map(emoji => {
+                                          const count = post.reactions?.[emoji]?.length || 0;
+                                          const isActive = post.reactions?.[emoji]?.includes(currentUser?.id || '');
+                                          return (
+                                             <button
+                                                key={emoji}
+                                                onClick={() => handleReaction(post.id, emoji)}
+                                                className={`hover:scale-110 transition-transform px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 ${isActive ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' : 'bg-slate-50 text-slate-400'}`}
+                                             >
+                                                <span>{emoji}</span>
+                                                {count > 0 && <span>{count}</span>}
+                                             </button>
+                                          );
+                                       })}
+                                    </div>
+                                    <button onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)} className={`flex items-center gap-2 group transition-all ${activeCommentPostId === post.id ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-600'}`}>
                                        <span className="text-xl group-hover:scale-125 transition-transform">💬</span>
-                                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{post.comments.length}</span>
+                                       <span className="text-[10px] font-black uppercase tracking-widest">{post.comments.length}</span>
                                     </button>
-                                    <button onClick={() => handleShare(post)} className="flex items-center gap-2 group ml-auto transition-all">
+                                    <button onClick={() => handleShare(post)} className="flex items-center gap-2 group ml-auto transition-all text-slate-400 hover:text-indigo-600">
                                        <span className="text-xl group-hover:scale-125 transition-transform">🚀</span>
-                                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Share</span>
+                                       <span className="text-[10px] font-black uppercase tracking-widest">Share</span>
                                     </button>
                                  </div>
 

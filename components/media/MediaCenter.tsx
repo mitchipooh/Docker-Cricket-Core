@@ -36,7 +36,7 @@ interface MediaCenterProps {
     initialTab?: MediaTab;
 }
 
-type MediaTab = 'NEWS' | 'FEED' | 'FIXTURES' | 'STANDINGS' | 'TEAMS' | 'PLAYERS' | 'STUDIO';
+type MediaTab = 'NEWS' | 'FEED' | 'FIXTURES' | 'STANDINGS' | 'TEAMS' | 'PLAYERS' | 'STUDIO' | 'FOLLOWING';
 type FixtureFilter = 'LIVE' | 'SCHEDULED' | 'COMPLETED' | 'UNOFFICIAL' | 'ARCHIVE';
 
 export const MediaCenter: React.FC<MediaCenterProps> = ({
@@ -224,7 +224,7 @@ export const MediaCenter: React.FC<MediaCenterProps> = ({
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-24 px-1 scroll-container w-full">
                 {activeTab === 'NEWS' && (
-                    <NewsFeed posts={displayedPosts} onAddPost={onAddMediaPost} onDeletePost={onDeletePost} isAdmin={isAdmin} currentUser={currentProfile} />
+                    <NewsFeed posts={displayedPosts} onAddPost={onAddMediaPost} onDeletePost={onDeletePost} onUpdatePost={onUpdatePost} isAdmin={isAdmin} currentUser={currentProfile} />
                 )}
 
                 {activeTab === 'FEED' && (

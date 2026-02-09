@@ -25,14 +25,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
     if (!isOpen) return null;
 
     const handleGoogleSignIn = async () => {
-        setLoading(true);
-        setError('');
-        const { error } = await signInWithGoogle();
-        if (error) {
-            setError(error.message);
-            setLoading(false);
-        }
-        // OAuth redirects, so we don't need to handle success here
+        alert('Google Sign-In is coming soon!');
     };
 
     const handleEmailAuth = async (e: React.FormEvent) => {
@@ -89,12 +82,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                 {/* Social Login */}
                 <div className="grid grid-cols-1 gap-3 mb-4">
                     <button
-                        onClick={async () => {
-                            setLoading(true);
-                            setError('');
-                            const { error } = await signInWithFacebook();
-                            if (error) { setError(error.message); setLoading(false); }
-                        }}
+                        onClick={() => alert('Facebook Sign-In is coming soon!')}
                         disabled={loading}
                         className="w-full bg-[#1877F2] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-3 hover:bg-[#1864D9] transition-colors disabled:opacity-50"
                     >

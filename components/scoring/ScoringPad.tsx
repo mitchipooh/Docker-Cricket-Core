@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { MainPad } from './scoring-pad/MainPad';
+import { MobileScoringPad } from './scoring-pad/MobileScoringPad';
 import { ExtrasPad } from './scoring-pad/ExtrasPad';
 import { EventsPad } from './scoring-pad/EventsPad';
 import { ConfirmationPad } from './scoring-pad/ConfirmationPad';
@@ -12,7 +13,16 @@ export const ScoringPad: React.FC<ScoringPadProps> = (props) => {
   const { padView, onBack } = props;
 
   if (padView === 'main') {
-    return <MainPad {...props} />;
+    return (
+      <>
+        <div className="md:hidden h-full w-full">
+          <MobileScoringPad {...props} />
+        </div>
+        <div className="hidden md:block h-full w-full">
+          <MainPad {...props} />
+        </div>
+      </>
+    );
   }
 
   if (padView === 'extras') {

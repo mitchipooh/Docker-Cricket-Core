@@ -108,6 +108,15 @@ export const Scorer: React.FC<ScorerProps> = ({
 
     const isAuthorized = userRole === 'Scorer' || userRole === 'Administrator' || (userRole === 'Umpire' && match.umpires?.includes(currentUserId));
 
+    const isLockedByOther = engine.state.activeScorerId && engine.state.activeScorerId !== currentUserId;
+    const isReadOnly = !isAuthorized || isLockedByOther;
+
+    const claimLock = () => {
+        if (!engine.state.activeScorerId && currentUserId) {
+            engine.updateMetadata({ activeScorerId: currentUserId });
+        }
+    };
+
     // Determine available officials from the relevant organization
     const availableOfficials = useMemo(() => {
         // Find org for this fixture
@@ -196,11 +205,15 @@ export const Scorer: React.FC<ScorerProps> = ({
     }, [engine.state, rules.totalOversAllowed, battingTeam, match, showStartModal]);
 
     const handleRun = (runs: number) => {
+        if (isReadOnly) return;
+        claimLock();
         engine.applyBall({ runs });
         if (autoAnalytics) setShowShotModal(true);
     };
 
     const handleCommitExtra = (type: string, runs: number, isOffBat?: boolean) => {
+        if (isReadOnly) return;
+        claimLock();
         let extraType: 'Wide' | 'NoBall' | 'Bye' | 'LegBye' | 'None' = 'None';
         if (type === 'Wide') extraType = 'Wide';
         if (type === 'NoBall') extraType = 'NoBall';
@@ -218,8 +231,9 @@ export const Scorer: React.FC<ScorerProps> = ({
     };
 
     const startNextInnings = () => {
+        if (isReadOnly) return;
+        claimLock();
         if (match.format === 'Test' && engine.state.innings < 4) {
-            const lead = 0;
             const followOn = false;
             engine.endInnings(false);
             engine.startInnings(engine.state.bowlingTeamId, engine.state.battingTeamId, undefined, followOn);
@@ -413,7 +427,7 @@ export const Scorer: React.FC<ScorerProps> = ({
     const layoutProps = {
         match, engine, teams, battingTeam, bowlingTeam,
         stats, timer, pad, wicket, rules,
-        onExit, isAuthorized: userRole === 'Scorer' || userRole === 'Administrator',
+        onExit, isAuthorized: !isReadOnly,
         onComplete,
         handlers: {
             handleRun,
@@ -451,7 +465,12 @@ export const Scorer: React.FC<ScorerProps> = ({
 
 
     return (
-        <div className="h-full w-full">
+        <div className="h-full w-full relative">
+            {isLockedByOther && (
+                <div className="absolute top-0 left-0 right-0 bg-red-600 text-white py-1 px-4 text-center text-[10px] font-black z-[100] animate-pulse">
+                    ⚠️ READ ONLY: THIS MATCH IS BEING SCORED BY ANOTHER USER
+                </div>
+            )}
             <MobileScorerLayout {...layoutProps} />
 
             {/* Test Match Status Overlay (Optional) */}
@@ -506,6 +525,8 @@ export const Scorer: React.FC<ScorerProps> = ({
                 onSelectOutPlayer={wicket.setOutPlayerId}
                 onSelectFielder={wicket.setFielderId}
                 onConfirm={() => {
+                    if (isReadOnly) return;
+                    claimLock();
                     engine.recordWicket({ type: 'WICKET', wicketType: wicket.wicketType!, batterId: wicket.outPlayerId!, fielderId: wicket.fielderId || undefined });
                     wicket.reset();
                     if (autoAnalytics) setShowShotModal(true);
@@ -563,6 +584,8 @@ export const Scorer: React.FC<ScorerProps> = ({
                 battingPlayers={selectableBatters}
                 bowlingPlayers={selectableBowlers}
                 onConfirm={(sId, nsId, bId) => {
+                    if (isReadOnly) return;
+                    claimLock();
                     // 1. Immediate State Update (Crucial for UI)
                     engine.updateMetadata({ strikerId: sId, nonStrikerId: nsId, bowlerId: bId });
 

@@ -1,5 +1,5 @@
 
-import { Organization, Team, MatchFixture, MediaPost, UserProfile } from '../types';
+import { Organization, Team, MatchFixture, MediaPost, UserProfile, GameIssue, MatchReportSubmission, UmpireMatchReport } from '../types';
 
 declare global {
   interface Window {
@@ -50,13 +50,21 @@ const mapFixture = (f: any) => ({
   status: f.status,
   result: f.result,
   winnerId: f.winner_id,
+  isArchived: f.is_archived,
   teamAScore: f.scores?.teamAScore,
   teamBScore: f.scores?.teamBScore,
   savedState: f.saved_state,
   ...(f.details || {})
 });
 
-export const pushGlobalSync = async (data: { orgs: Organization[], standaloneMatches: MatchFixture[], mediaPosts: MediaPost[] }, userId?: string) => {
+export const pushGlobalSync = async (data: {
+  orgs: Organization[],
+  standaloneMatches: MatchFixture[],
+  mediaPosts: MediaPost[],
+  issues?: GameIssue[],
+  matchReports?: MatchReportSubmission[],
+  umpireReports?: UmpireMatchReport[]
+}, userId?: string) => {
   // We need to deconstruct the nested app state into flat relational arrays
   const orgsPayload: any[] = [];
   const teamsPayload: any[] = [];
@@ -137,8 +145,20 @@ export const pushGlobalSync = async (data: { orgs: Organization[], standaloneMat
         id: f.id, tournament_id: f.tournamentId, team_a_id: f.teamAId, team_b_id: f.teamBId,
         date: f.date, venue: f.venue, status: f.status, result: f.result, winner_id: f.winnerId,
         scores: { teamAScore: f.teamAScore, teamBScore: f.teamBScore }, saved_state: f.savedState,
+        is_archived: f.isArchived,
         details: { umpires: f.umpires, tossWinnerId: f.tossWinnerId, tossDecision: f.tossDecision }
       });
+    });
+  });
+
+  // --- NEW: Standalone Matches Sync ---
+  (data.standaloneMatches || []).forEach(f => {
+    fixturesPayload.push({
+      id: f.id, tournament_id: null, team_a_id: f.teamAId, team_b_id: f.teamBId,
+      date: f.date, venue: f.venue, status: f.status, result: f.result, winner_id: f.winnerId,
+      scores: { teamAScore: f.teamAScore, teamBScore: f.teamBScore }, saved_state: f.savedState,
+      is_archived: f.isArchived,
+      details: { umpires: f.umpires, tossWinnerId: f.tossWinnerId, tossDecision: f.tossDecision }
     });
   });
 
@@ -179,7 +199,9 @@ export const pushGlobalSync = async (data: { orgs: Organization[], standaloneMat
   const { error: err5 } = await supabase.from('fixtures').upsert(fixturesPayload);
   const { error: err6 } = await supabase.from('media_posts').upsert(data.mediaPosts.map(p => ({
     id: p.id, type: p.type, title: p.title, caption: p.caption, author_name: p.authorName,
-    content_url: p.contentUrl, likes: p.likes, timestamp: new Date(p.timestamp)
+    content_url: p.contentUrl, likes: p.likes, timestamp: new Date(p.timestamp),
+    comments: p.comments || [],
+    reactions: p.reactions || {}
   })));
 
   const { error: err7 } = orgTeamLinks.length > 0
@@ -217,7 +239,43 @@ export const pushGlobalSync = async (data: { orgs: Organization[], standaloneMat
     })
     : { error: null };
 
-  if (err1 || err2 || err3 || err4 || err5 || err6 || err7 || err8 || err9 || err10 || err11) {
+  // --- NEW: Game Data Sync ---
+  const { error: err12 } = (data.issues || []).length > 0
+    ? await supabase.from('game_issues').upsert((data.issues || []).map(i => ({
+      id: i.id, match_id: i.matchId, lodged_by: i.lodgedBy, team_id: i.teamId,
+      type: i.type, title: i.title, description: i.description, status: i.status,
+      evidence_urls: i.evidenceUrls, admin_comments: i.adminComments,
+      resolution: i.resolution, admin_response: i.adminResponse,
+      resolved_at: i.resolvedAt ? new Date(i.resolvedAt) : null,
+      timestamp: new Date(i.timestamp)
+    })))
+    : { error: null };
+
+  const { error: err13 } = (data.matchReports || []).length > 0
+    ? await supabase.from('match_reports').upsert((data.matchReports || []).map(r => ({
+      id: r.id, match_id: r.matchId, submitted_by: r.submittedBy, status: r.status,
+      scorecard_photo_url: r.scorecardPhotoUrl, admin_feedback: r.adminFeedback,
+      player_performances: r.playerPerformances, umpires: r.umpires,
+      umpire_ratings: r.umpireRatings, facility_rating: r.facilityRating,
+      spirit_rating: r.spiritRating, timestamp: new Date(r.timestamp),
+      team_a_performance: { score: r.teamAScore, wickets: r.teamAWickets, overs: r.teamAOvers },
+      team_b_performance: { score: r.teamBScore, wickets: r.teamBWickets, overs: r.teamBOvers }
+    })))
+    : { error: null };
+
+  const { error: err14 } = (data.umpireReports || []).length > 0
+    ? await supabase.from('umpire_reports').upsert((data.umpireReports || []).map(r => ({
+      id: r.id, match_id: r.matchId, fixture_id: r.fixtureId, submitted_by: r.submittedBy,
+      umpire_name: r.umpireName, status: r.status, match_outcome: r.matchOutcome,
+      conduct_notes: r.conductNotes, rule_violations: r.ruleViolations,
+      player_behavior_ratings: r.playerBehaviorRatings, facility_report: r.facilityReport,
+      incident_reports: r.incidentReports, supporting_documents: r.supportingDocuments,
+      organization_id: r.organizationId, reviewed_by: r.reviewedBy, review_notes: r.reviewNotes,
+      timestamp: new Date(r.timestamp)
+    })))
+    : { error: null };
+
+  if (err1 || err2 || err3 || err4 || err5 || err6 || err7 || err8 || err9 || err10 || err11 || err12 || err13 || err14) {
     console.error("Relational Sync Error Details:");
     if (err1) console.error("Organizations Error:", JSON.stringify(err1, null, 2));
     if (err2) console.error("Tournaments Error:", JSON.stringify(err2, null, 2));
@@ -225,8 +283,11 @@ export const pushGlobalSync = async (data: { orgs: Organization[], standaloneMat
     if (err4) console.error("Players Error:", JSON.stringify(err4, null, 2));
     if (err5) console.error("Fixtures Error:", JSON.stringify(err5, null, 2));
     if (err6) console.error("Media Error:", JSON.stringify(err6, null, 2));
+    if (err12) console.error("Issues Error:", JSON.stringify(err12, null, 2));
+    if (err13) console.error("Match Reports Error:", JSON.stringify(err13, null, 2));
+    if (err14) console.error("Umpire Reports Error:", JSON.stringify(err14, null, 2));
 
-    console.error("Summary:", { err1, err2, err3, err4, err5, err6, err7, err8, err9, err10, err11 });
+    console.error("Summary:", { err1, err2, err3, err4, err5, err6, err7, err8, err9, err10, err11, err12, err13, err14 });
     return false;
   }
   console.log("DB_SYNC_DEBUG: Sync Successful (including groups & junction tables)");
@@ -355,9 +416,17 @@ export const updateAffiliationStatus = async (parentOrgId: string, childOrgId: s
 };
 
 
-export const fetchGlobalSync = async (userId?: string): Promise<{ orgs: Organization[], allTeams: Team[], standaloneMatches: MatchFixture[], mediaPosts: MediaPost[] } | null> => {
+export const fetchGlobalSync = async (userId?: string): Promise<{
+  orgs: Organization[],
+  allTeams: Team[],
+  standaloneMatches: MatchFixture[],
+  mediaPosts: MediaPost[],
+  issues: GameIssue[],
+  matchReports: MatchReportSubmission[],
+  umpireReports: UmpireMatchReport[]
+} | null> => {
   try {
-    const [orgs, teams, players, tournaments, fixtures, media, orgTeamLinks, tournamentTeamLinks, groups, groupTeamLinks, orgAffiliations] = await Promise.all([
+    const [orgs, teams, players, tournaments, fixtures, media, orgTeamLinks, tournamentTeamLinks, groups, groupTeamLinks, orgAffiliations, dbIssues, dbMatchReports, dbUmpireReports] = await Promise.all([
       supabase.from('organizations').select('*'),
       supabase.from('teams').select('*'),
       supabase.from('roster_players').select('*'),
@@ -368,7 +437,10 @@ export const fetchGlobalSync = async (userId?: string): Promise<{ orgs: Organiza
       supabase.from('tournament_teams').select('*'),
       supabase.from('tournament_groups').select('*'),
       supabase.from('group_teams').select('*'),
-      supabase.from('organization_affiliations').select('*')
+      supabase.from('organization_affiliations').select('*'),
+      supabase.from('game_issues').select('*'),
+      supabase.from('match_reports').select('*'),
+      supabase.from('umpire_reports').select('*')
     ]);
 
     if (orgs.error || teams.error || players.error) {
@@ -523,17 +595,50 @@ export const fetchGlobalSync = async (userId?: string): Promise<{ orgs: Organiza
     const mappedMedia = media.data?.map((p: any) => ({
       id: p.id, type: p.type, title: p.title, caption: p.caption, authorName: p.author_name,
       contentUrl: p.content_url, likes: p.likes, timestamp: new Date(p.timestamp).getTime(),
-      comments: []
+      comments: p.comments || [],
+      reactions: p.reactions || {}
     })) || [];
 
     // Map ALL teams for global registry
     const allTeamsMapped: Team[] = teams.data?.map((t: any) => mapTeam(t, players.data || [])) || [];
 
+    const mappedIssues: GameIssue[] = (dbIssues.data || []).map((i: any) => ({
+      id: i.id, matchId: i.match_id, lodgedBy: i.lodged_by, teamId: i.team_id,
+      type: i.type, title: i.title, description: i.description, status: i.status,
+      evidenceUrls: i.evidence_urls, adminComments: i.admin_comments,
+      resolution: i.resolution, adminResponse: i.admin_response,
+      resolvedAt: i.resolved_at ? new Date(i.resolved_at).getTime() : undefined,
+      timestamp: new Date(i.timestamp).getTime()
+    }));
+
+    const mappedMatchReports: MatchReportSubmission[] = (dbMatchReports.data || []).map((r: any) => ({
+      id: r.id, matchId: r.match_id, submittedBy: r.submitted_by, status: r.status,
+      scorecardPhotoUrl: r.scorecard_photo_url, adminFeedback: r.admin_feedback,
+      playerPerformances: r.player_performances || [], umpires: r.umpires || [],
+      umpireRatings: r.umpire_ratings || {}, facilityRating: r.facility_rating || {},
+      spiritRating: r.spirit_rating || {}, timestamp: new Date(r.timestamp).getTime(),
+      teamAScore: r.team_a_performance?.score || 0, teamAWickets: r.team_a_performance?.wickets || 0, teamAOvers: r.team_a_performance?.overs || '0',
+      teamBScore: r.team_b_performance?.score || 0, teamBWickets: r.team_b_performance?.wickets || 0, teamBOvers: r.team_b_performance?.overs || '0'
+    }));
+
+    const mappedUmpireReports: UmpireMatchReport[] = (dbUmpireReports.data || []).map((r: any) => ({
+      id: r.id, matchId: r.match_id, fixtureId: r.fixture_id, submittedBy: r.submitted_by,
+      umpireName: r.umpire_name, status: r.status, matchOutcome: r.match_outcome,
+      conductNotes: r.conduct_notes, ruleViolations: r.rule_violations || [],
+      playerBehaviorRatings: r.player_behavior_ratings || {}, facilityReport: r.facility_report || {},
+      incidentReports: r.incident_reports || [], supportingDocuments: r.supporting_documents || [],
+      organizationId: r.organization_id, reviewedBy: r.reviewed_by, review_notes: r.review_notes,
+      timestamp: new Date(r.timestamp).getTime()
+    }));
+
     return {
       orgs: mappedOrgs,
       allTeams: allTeamsMapped,
-      standaloneMatches: [],
-      mediaPosts: mappedMedia as MediaPost[]
+      standaloneMatches: fixtures.data?.filter((f: any) => !f.tournament_id).map(mapFixture) || [],
+      mediaPosts: mappedMedia as MediaPost[],
+      issues: mappedIssues,
+      matchReports: mappedMatchReports,
+      umpireReports: mappedUmpireReports
     };
 
   } catch (error) {

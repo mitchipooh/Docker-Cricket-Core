@@ -6,14 +6,17 @@ interface NewsFeedProps {
     posts: MediaPost[];
     onAddPost: (post: MediaPost) => void;
     onDeletePost?: (postId: string) => void;
+    onUpdatePost?: (post: MediaPost) => void;
     isAdmin: boolean;
     currentUser?: UserProfile | null;
 }
 
-export const NewsFeed: React.FC<NewsFeedProps> = ({ posts, onAddPost, onDeletePost, isAdmin, currentUser }) => {
+export const NewsFeed: React.FC<NewsFeedProps> = ({ posts, onAddPost, onDeletePost, onUpdatePost, isAdmin, currentUser }) => {
     const [isCreating, setIsCreating] = useState(false);
     const [articleTitle, setArticleTitle] = useState('');
     const [articleBody, setArticleBody] = useState('');
+    const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+    const [commentInput, setCommentInput] = useState('');
 
     // Filter ONLY news posts for this view
     const newsPosts = posts.filter(p => p.type === 'NEWS').sort((a, b) => b.timestamp - a.timestamp);
@@ -40,6 +43,42 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({ posts, onAddPost, onDeletePo
         setArticleTitle('');
         setArticleBody('');
     };
+    const handlePostComment = (postId: string) => {
+        if (!commentInput.trim() || !currentUser || !onUpdatePost) return;
+        const post = newsPosts.find(p => p.id === postId);
+        if (!post) return;
+
+        const newComment = {
+            id: `c-${Date.now()}`,
+            userId: currentUser.id,
+            author: currentUser.name,
+            text: commentInput.trim(),
+            timestamp: Date.now()
+        };
+
+        onUpdatePost({ ...post, comments: [...post.comments, newComment] });
+        setCommentInput('');
+    };
+
+    const handleReaction = (postId: string, emoji: string) => {
+        if (!currentUser || !onUpdatePost) return;
+        const post = newsPosts.find(p => p.id === postId);
+        if (!post) return;
+
+        const reactions = post.reactions || {};
+        const currentRes = reactions[emoji] || [];
+        let nextRes = [...currentRes];
+
+        if (nextRes.includes(currentUser.id)) {
+            nextRes = nextRes.filter(id => id !== currentUser.id);
+        } else {
+            nextRes.push(currentUser.id);
+        }
+
+        const nextReactions = { ...reactions, [emoji]: nextRes };
+        onUpdatePost({ ...post, reactions: nextReactions });
+    };
+
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-20 animate-in fade-in">
@@ -115,7 +154,53 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({ posts, onAddPost, onDeletePo
                             <p className="text-sm text-slate-600 leading-relaxed line-clamp-4">
                                 {post.caption}
                             </p>
-                            <button className="mt-6 text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-700">Read Full Story →</button>
+
+                            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-50 pt-4">
+                                <div className="flex gap-1.5">
+                                    {['🔥', '👏', '🏏', '❤️'].map(emoji => {
+                                        const count = post.reactions?.[emoji]?.length || 0;
+                                        const isActive = post.reactions?.[emoji]?.includes(currentUser?.id || '');
+                                        return (
+                                            <button
+                                                key={emoji}
+                                                onClick={() => handleReaction(post.id, emoji)}
+                                                className={`hover:scale-110 transition-transform px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1 ${isActive ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' : 'bg-slate-50 text-slate-400'}`}
+                                            >
+                                                <span>{emoji}</span>
+                                                {count > 0 && <span>{count}</span>}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <button onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)} className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${activeCommentPostId === post.id ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-600'}`}>
+                                    💬 {post.comments.length}
+                                </button>
+                                <button className="ml-auto text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-700">Read Full Story →</button>
+                            </div>
+
+                            {activeCommentPostId === post.id && (
+                                <div className="mt-4 p-4 bg-slate-50 rounded-2xl animate-in slide-in-from-top-2 border border-slate-100">
+                                    <div className="space-y-3 mb-4 max-h-40 overflow-y-auto no-scrollbar">
+                                        {post.comments.map(c => (
+                                            <div key={c.id} className="flex flex-col">
+                                                <span className="font-black text-slate-900 text-[9px] uppercase tracking-widest">{c.author}</span>
+                                                <span className="text-slate-600 text-xs font-medium">{c.text}</span>
+                                            </div>
+                                        ))}
+                                        {post.comments.length === 0 && <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center py-2">No comments yet</p>}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            value={commentInput}
+                                            onChange={e => setCommentInput(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && handlePostComment(post.id)}
+                                            placeholder="Write a comment..."
+                                            className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-100"
+                                        />
+                                        <button onClick={() => handlePostComment(post.id)} className="bg-slate-900 text-white px-3 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors">Post</button>
+                                    </div>
+                                </div>
+                            )}
                         </article>
                     ))}
                 </div>

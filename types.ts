@@ -352,6 +352,7 @@ export type Tournament = {
   description?: string;
   teamIds?: string[]; // Added teamIds for linking
   orgId?: string; // Added orgId ref
+  createdBy?: string; // Added createdBy ref
 };
 
 export type OrgMember = {
@@ -442,6 +443,7 @@ export type TestMatchConfig = {
 };
 
 export type MatchState = {
+  activeScorerId?: string;
   testConfig?: TestMatchConfig;
   battingTeamId: string;
   bowlingTeamId: string;
@@ -610,6 +612,7 @@ export interface MediaPost {
   timestamp: number;
   likes: string[]; // User IDs who liked
   dislikes: string[]; // User IDs who disliked
+  reactions?: Record<string, string[]>; // Emoji -> User IDs
   shares: number;
   comments: Comment[];
   matchId?: string;

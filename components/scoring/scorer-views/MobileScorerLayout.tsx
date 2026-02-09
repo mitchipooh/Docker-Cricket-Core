@@ -20,6 +20,33 @@ export const MobileScorerLayout = ({
     const [rightPanel, setRightPanel] = useState<'SCORECARD' | 'BALLS' | 'INFO' | 'SUMMARY' | null>(null);
     const [showShotMapPanel, setShowShotMapPanel] = useState(false);
     const [showCopiedToast, setShowCopiedToast] = useState(false);
+    const [isInternalFullscreen, setIsInternalFullscreen] = useState(!!document.fullscreenElement);
+
+    React.useEffect(() => {
+        // Auto-fullscreen when entering scoring mode
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        }
+
+        const handleFullscreenChange = () => {
+            setIsInternalFullscreen(!!document.fullscreenElement);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
 
     const handleShareMatch = () => {
         const url = new URL(window.location.href);
@@ -216,16 +243,38 @@ export const MobileScorerLayout = ({
                         )}
                     </div>
 
-                    {/* Recent Activity Strip (Horizontal) */}
-                    <div className="shrink-0 bg-white border-y border-gray-200 py-3 relative shadow-inner z-10">
-                        <div className="flex items-center gap-3 px-4 overflow-x-auto no-scrollbar">
-                            <span className="text-[10px] font-black text-gray-400 uppercase shrink-0 sticky left-0 bg-white pr-2">Recent</span>
-                            {engine.state.history.slice(-12).reverse().map((b, i) => (
-                                <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-sm border ${b.isWicket ? 'bg-red-500 text-white border-red-600' : (b.runs >= 4 ? 'bg-teal-600 text-white border-teal-700' : 'bg-gray-100 text-gray-600 border-gray-200')}`}>
-                                    {b.isWicket ? 'W' : b.runs + (b.extraRuns || 0)}
+                    {/* Recent Activity Strip (Two Rows: Current and Previous Over) */}
+                    <div className="shrink-0 bg-white border-y border-gray-200 py-2 relative shadow-inner z-10 flex flex-col gap-2">
+                        {(() => {
+                            const currentOverIndex = Math.floor(engine.state.totalBalls / 6);
+                            const getBallsForOver = (overIdx: number) =>
+                                engine.state.history.filter(b => b.innings === engine.state.innings && b.over === overIdx).reverse();
+
+                            const currentOverBalls = getBallsForOver(currentOverIndex);
+                            const prevOverBalls = currentOverIndex > 0 ? getBallsForOver(currentOverIndex - 1) : [];
+
+                            const renderOverRow = (balls: BallEvent[], label: string, isCurrent: boolean) => (
+                                <div className="flex items-center gap-2 px-4">
+                                    <span className={`text-[8px] font-black uppercase shrink-0 w-12 tracking-tighter ${isCurrent ? 'text-teal-600' : 'text-gray-400'}`}>
+                                        {label}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                                        {balls.length > 0 ? balls.map((b, i) => (
+                                            <div key={i} className={`w-7 h-7 rounded-sm flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm border ${b.isWicket ? 'bg-red-500 text-white border-red-600' : (b.runs >= 4 ? 'bg-teal-600 text-white border-teal-700' : 'bg-gray-50 text-gray-600 border-gray-200')}`}>
+                                                {b.isWicket ? 'W' : (b.runs + (b.extraRuns || 0))}
+                                            </div>
+                                        )) : <div className="text-[10px] text-gray-300 font-bold">Waiting...</div>}
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            );
+
+                            return (
+                                <>
+                                    {renderOverRow(currentOverBalls, `Over ${currentOverIndex}`, true)}
+                                    {currentOverIndex > 0 && renderOverRow(prevOverBalls, `Over ${currentOverIndex - 1}`, false)}
+                                </>
+                            );
+                        })()}
                     </div>
 
                     {/* Footer Section: Keypad - Fixed height/Compact, but grounded */}
@@ -460,21 +509,40 @@ export const MobileScorerLayout = ({
             <div className="bg-white border-b border-gray-200 shrink-0 sticky top-0 z-50">
                 <div className="flex justify-between items-center p-4 pb-2">
                     <button onClick={onExit} className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200">←</button>
-                    <span className="font-bold text-gray-900 text-lg">Match Centre</span>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900 text-lg">Match Centre</span>
+                        <button
+                            onClick={toggleFullscreen}
+                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+                            title={isInternalFullscreen ? "Minimize" : "Maximize"}
+                        >
+                            {isInternalFullscreen ? '📉' : '📈'}
+                        </button>
+                    </div>
                     <div className="flex gap-2">
                         <button
                             onClick={engine.undoBall}
-                            disabled={!engine.canUndo}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${engine.canUndo ? 'bg-orange-100 text-orange-600 hover:bg-orange-200' : 'bg-gray-100 text-gray-300'}`}
+                            disabled={!engine.canUndo || !isAuthorized}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${engine.canUndo && isAuthorized ? 'bg-orange-100 text-orange-600 hover:bg-orange-200' : 'bg-gray-100 text-gray-300'}`}
                         >
                             ↩️
                         </button>
-                        <button onClick={handlers.handleManualSave} className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transaction-colors" title="Save">
+                        <button
+                            onClick={handlers.handleManualSave}
+                            disabled={!isAuthorized}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isAuthorized ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' : 'bg-gray-100 text-gray-300'}`}
+                            title="Save"
+                        >
                             💾
                         </button>
-                        <button onClick={() => {
-                            if (window.confirm('End Match?')) handlers.handleManualConclude();
-                        }} className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200 transition-all active:scale-90" title="End">
+                        <button
+                            onClick={() => {
+                                if (window.confirm('End Match?')) handlers.handleManualConclude();
+                            }}
+                            disabled={!isAuthorized}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isAuthorized ? 'bg-red-100 text-red-600 hover:bg-red-200 active:scale-90' : 'bg-gray-100 text-gray-300'}`}
+                            title="End"
+                        >
                             🏁
                         </button>
                         <button onClick={handleShareMatch} className="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center hover:bg-teal-200 transition-all active:scale-90 relative" title="Share Match">
@@ -489,12 +557,18 @@ export const MobileScorerLayout = ({
                 </div>
 
                 {/* Tabs */}
-                <div className="flex justify-around items-center px-4">
-                    {['SCORING', 'SCORECARD', 'BALLS', 'ANALYSIS', 'SUMMARY', 'INFO'].map(tab => (
+                <div className="flex justify-around items-stretch border-t border-gray-100">
+                    {['SCORING', 'SCORECARD', 'BALLS', 'ANALYSIS', 'SUMMARY', 'INFO'].map((tab, idx, arr) => (
                         <button
                             key={tab}
                             onClick={() => handleTabClick(tab as any)}
-                            className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${mobileTab === tab || leftPanel === tab || rightPanel === tab ? 'text-teal-700 border-teal-700' : 'text-gray-400 border-transparent'}`}
+                            className={`flex-1 py-3 text-[9px] font-black uppercase tracking-tighter transition-all flex items-center justify-center text-center
+                                ${mobileTab === tab || leftPanel === tab || rightPanel === tab
+                                    ? 'text-teal-700 bg-teal-50/50 shadow-[inset_0_-2px_0_0_#0f766e]'
+                                    : 'text-gray-400 hover:bg-gray-50'
+                                }
+                                ${idx < arr.length - 1 ? 'border-r border-gray-100' : ''}
+                            `}
                         >
                             {tab}
                         </button>

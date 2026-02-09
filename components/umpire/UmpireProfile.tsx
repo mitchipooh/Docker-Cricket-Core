@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { MatchFixture, UserProfile, Organization, Team, UmpireMatchReport } from '../../types';
+import { UmpireReportForm } from './UmpireReportForm';
 
 interface UmpireProfileProps {
     profile: UserProfile;
@@ -81,8 +82,8 @@ export const UmpireProfile: React.FC<UmpireProfileProps> = ({
                         </div>
                     </div>
                     <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider ${fixture.status === 'Scheduled' ? 'bg-blue-100 text-blue-600' :
-                            fixture.status === 'Live' ? 'bg-green-100 text-green-600' :
-                                'bg-slate-100 text-slate-600'
+                        fixture.status === 'Live' ? 'bg-green-100 text-green-600' :
+                            'bg-slate-100 text-slate-600'
                         }`}>
                         {fixture.status}
                     </span>
@@ -218,18 +219,27 @@ export const UmpireProfile: React.FC<UmpireProfileProps> = ({
                 </div>
             )}
 
-            {/* Report Modal Placeholder - Will be replaced with UmpireReportModal */}
+            {/* Report Modal */}
             {showReportModal && selectedFixture && (
                 <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-8 max-w-2xl w-full">
-                        <h2 className="text-2xl font-black text-slate-900 mb-4">Submit Match Report</h2>
-                        <p className="text-slate-500 mb-6">Report modal will be implemented in next step.</p>
-                        <button
-                            onClick={() => setShowReportModal(false)}
-                            className="bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-bold hover:bg-slate-300 transition-all"
-                        >
-                            Close
-                        </button>
+                    <div className="bg-white rounded-[3rem] p-10 max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Submit Match Report</h2>
+                            <button onClick={() => setShowReportModal(false)} className="text-slate-400 hover:text-slate-600 text-2xl font-black">✕</button>
+                        </div>
+
+                        <UmpireReportForm
+                            fixture={selectedFixture}
+                            umpireId={profile.id}
+                            umpireName={profile.name}
+                            organizationId={umpireOrg?.id || 'GLOBAL'}
+                            onSubmit={(report) => {
+                                onSubmitReport(report);
+                                setShowReportModal(false);
+                                setSelectedFixture(null);
+                            }}
+                            onCancel={() => setShowReportModal(false)}
+                        />
                     </div>
                 </div>
             )}

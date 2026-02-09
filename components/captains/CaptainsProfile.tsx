@@ -4,6 +4,7 @@ import { Player, Team, MatchFixture, PlayerMatchPerformance, MatchReportSubmissi
 import { MatchReportForm } from './MatchReportForm.tsx';
 import { ProtestModal } from './ProtestModal.tsx';
 import { SquadSelectorModal } from './SquadSelectorModal';
+import { StatsAnalytics } from '../analytics/StatsAnalytics';
 
 interface CaptainsProfileProps {
     team: Team;
@@ -91,7 +92,15 @@ export const CaptainsProfile: React.FC<CaptainsProfileProps> = ({
                         </div>
                         <div>
                             <h1 className="text-4xl font-black text-slate-900 tracking-tighter">{team.name} Hub</h1>
-                            <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-1">Captain: {currentUser.name}</p>
+                            <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-1">
+                                {currentUser.role === 'Coach' ? 'Coach' : 'Captain'}: {currentUser.name}
+                                <button
+                                    onClick={onBack}
+                                    className="ml-4 text-[9px] bg-slate-100 hover:bg-slate-200 text-slate-500 py-1 px-3 rounded-full transition-all"
+                                >
+                                    Back to Dashboard
+                                </button>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -351,51 +360,68 @@ export const CaptainsProfile: React.FC<CaptainsProfileProps> = ({
             )}
 
             {view === 'INSIGHTS' && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
-                        <h3 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-4">
-                            Best Playing 11
-                            <span className="text-[10px] bg-slate-100 px-4 py-2 rounded-full font-black text-slate-400 uppercase tracking-[0.2em] border border-slate-200">AI Logic</span>
-                        </h3>
-                        <div className="space-y-3">
-                            {best11.map((player, idx) => (
-                                <div key={player.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-xs font-black text-indigo-500 w-4">{idx + 1}</span>
-                                        <div>
-                                            <p className="font-black text-slate-900 text-sm uppercase">{player.name}</p>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{player.role}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-right">
-                                            <p className="font-black text-indigo-600 text-xs">{((player.stats.runs + (player.stats.wickets * 25)) / (player.stats.matches || 1)).toFixed(1)}</p>
-                                            <p className="text-[7px] font-black text-slate-400 uppercase">Impact</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                <div className="space-y-10">
+                    <div className="bg-white rounded-[3rem] p-8 shadow-xl border border-slate-100 overflow-hidden">
+                        <div className="flex items-center justify-between mb-8 px-4">
+                            <h3 className="text-2xl font-black text-slate-900 border-l-4 border-indigo-600 pl-4">Team Performance Analytics</h3>
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Live Engine Active</span>
+                            </div>
                         </div>
+                        <StatsAnalytics
+                            teams={[team]}
+                            onBack={() => setView('OVERVIEW')}
+                            hideHeader={true}
+                        />
                     </div>
 
-                    <div className="space-y-10">
-                        <div className="bg-indigo-600 rounded-[3rem] p-12 text-white shadow-2xl flex flex-col justify-between">
-                            <div>
-                                <h3 className="text-4xl font-black tracking-tighter mb-4 italic">Performance Summary</h3>
-                                <p className="text-indigo-100 font-bold opacity-80 leading-relaxed">Based on overall season statistics, your squad has a strong batting core. The AI suggests focusing on death bowling efficiency in upcoming practices.</p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
+                            <h3 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-4">
+                                Best Playing 11
+                                <span className="text-[10px] bg-slate-100 px-4 py-2 rounded-full font-black text-slate-400 uppercase tracking-[0.2em] border border-slate-200">AI Logic</span>
+                            </h3>
+                            <div className="space-y-3">
+                                {best11.map((player, idx) => (
+                                    <div key={player.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-xs font-black text-indigo-500 w-4">{idx + 1}</span>
+                                            <div>
+                                                <p className="font-black text-slate-900 text-sm uppercase">{player.name}</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{player.role}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <p className="font-black text-indigo-600 text-xs">{((player.stats.runs + (player.stats.wickets * 25)) / (player.stats.matches || 1)).toFixed(1)}</p>
+                                                <p className="text-[7px] font-black text-slate-400 uppercase">Impact</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="mt-12 grid grid-cols-3 gap-6">
-                                <div className="text-center">
-                                    <p className="text-3xl font-black">{team.players.reduce((sum, p) => sum + p.stats.runs, 0)}</p>
-                                    <p className="text-[8px] font-black uppercase text-indigo-200 tracking-widest">Runs</p>
+                        </div>
+
+                        <div className="space-y-10">
+                            <div className="bg-indigo-600 rounded-[3rem] p-12 text-white shadow-2xl flex flex-col justify-between">
+                                <div>
+                                    <h3 className="text-4xl font-black tracking-tighter mb-4 italic">Performance Summary</h3>
+                                    <p className="text-indigo-100 font-bold opacity-80 leading-relaxed">Based on overall season statistics, your squad has a strong batting core. The AI suggests focusing on death bowling efficiency in upcoming practices.</p>
                                 </div>
-                                <div className="text-center border-x border-indigo-400/30">
-                                    <p className="text-3xl font-black">{team.players.reduce((sum, p) => sum + p.stats.wickets, 0)}</p>
-                                    <p className="text-[8px] font-black uppercase text-indigo-200 tracking-widest">Wickets</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-3xl font-black">{team.players.length}</p>
-                                    <p className="text-[8px] font-black uppercase text-indigo-200 tracking-widest">Squad</p>
+                                <div className="mt-12 grid grid-cols-3 gap-6">
+                                    <div className="text-center">
+                                        <p className="text-3xl font-black">{team.players.reduce((sum, p) => sum + p.stats.runs, 0)}</p>
+                                        <p className="text-[8px] font-black uppercase text-indigo-200 tracking-widest">Runs</p>
+                                    </div>
+                                    <div className="text-center border-x border-indigo-400/30">
+                                        <p className="text-3xl font-black">{team.players.reduce((sum, p) => sum + p.stats.wickets, 0)}</p>
+                                        <p className="text-[8px] font-black uppercase text-indigo-200 tracking-widest">Wickets</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-3xl font-black">{team.players.length}</p>
+                                        <p className="text-[8px] font-black uppercase text-indigo-200 tracking-widest">Squad</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

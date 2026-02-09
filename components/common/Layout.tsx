@@ -19,21 +19,23 @@ interface LayoutProps {
   organizations: Organization[];
   viewingOrgId?: string | null;
   onThemeToggle: () => void;
-  settings: { notifications: boolean; sound: boolean; devMode?: boolean; fullScreen?: boolean };
-  onToggleSetting: (key: 'notifications' | 'sound' | 'devMode' | 'fullScreen') => void;
+  settings: { notifications: boolean; sound: boolean; devMode?: boolean; fullScreen?: boolean; demoMode?: boolean };
+  onToggleSetting: (key: 'notifications' | 'sound' | 'devMode' | 'fullScreen' | 'demoMode') => void;
   onEditProfile?: () => void;
   onApplyForAccreditation?: () => void;
   onSignOut: () => void;
   onSignIn?: () => void;
+  onSignUp?: () => void;
   onSwitchProfile: (type: 'ADMIN' | 'SCORER' | 'FAN' | 'COACH' | 'UMPIRE' | 'PLAYER' | 'GUEST' | 'CAPTAIN') => void;
   showCaptainHub?: boolean;
+  activeViewRole?: UserProfile['role'];
 }
 
 export const Layout: React.FC<LayoutProps> = ({
   children, activeTab, onTabChange, profile, theme, onThemeToggle,
   settings, onToggleSetting, onEditProfile, onApplyForAccreditation,
-  onSignOut, onSignIn, onSwitchProfile, showCaptainHub,
-  organizations = [], viewingOrgId
+  onSignOut, onSignIn, onSignUp, onSwitchProfile, showCaptainHub,
+  organizations = [], viewingOrgId, activeViewRole
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -117,18 +119,20 @@ export const Layout: React.FC<LayoutProps> = ({
   return (
     <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} relative transition-colors duration-300 flex flex-col overflow-hidden`}>
       <div className="fixed top-4 left-4 lg:top-6 lg:left-6 z-50 flex items-center gap-4">
-        <button
-          onClick={() => { setIsMenuOpen(!isMenuOpen); setIsSettingsOpen(false); }}
-          className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-300 shadow-2xl z-50 ${isMenuOpen
-            ? 'bg-slate-800 text-white rotate-90 ring-2 ring-indigo-500'
-            : 'bg-indigo-600 text-white hover:scale-105 active:scale-95 shadow-indigo-600/40'
-            }`}
-          aria-label="Menu"
-        >
-          <span className={`w-6 h-1 bg-current rounded-full transition-all ${isMenuOpen ? 'rotate-45 translate-y-2.5' : ''}`}></span>
-          <span className={`w-6 h-1 bg-current rounded-full transition-all ${isMenuOpen ? 'opacity-0' : ''}`}></span>
-          <span className={`w-6 h-1 bg-current rounded-full transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2.5' : ''}`}></span>
-        </button>
+        {activeTab !== 'scorer' && (
+          <button
+            onClick={() => { setIsMenuOpen(!isMenuOpen); setIsSettingsOpen(false); }}
+            className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all duration-300 shadow-2xl z-50 ${isMenuOpen
+              ? 'bg-slate-800 text-white rotate-90 ring-2 ring-indigo-500'
+              : 'bg-indigo-600 text-white hover:scale-105 active:scale-95 shadow-indigo-600/40'
+              }`}
+            aria-label="Menu"
+          >
+            <span className={`w-6 h-1 bg-current rounded-full transition-all ${isMenuOpen ? 'rotate-45 translate-y-2.5' : ''}`}></span>
+            <span className={`w-6 h-1 bg-current rounded-full transition-all ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+            <span className={`w-6 h-1 bg-current rounded-full transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2.5' : ''}`}></span>
+          </button>
+        )}
 
         {!isMenuOpen && activeTab !== 'scorer' && (
           <div className="hidden md:flex items-center gap-3 bg-slate-900/10 backdrop-blur-md p-1 pr-4 rounded-2xl border border-white/10 shadow-sm animate-in fade-in slide-in-from-left-4">
@@ -174,14 +178,16 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         )}
 
-        <button
-          onClick={() => { setIsSettingsOpen(!isSettingsOpen); setIsMenuOpen(false); setShowNotifications(false); }}
-          className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-2xl z-50 ${isSettingsOpen ? 'bg-slate-800 text-white rotate-180 ring-2 ring-slate-600' : 'bg-white/10 backdrop-blur-md text-slate-400 border border-white/5 hover:bg-white/20'
-            }`}
-          aria-label="Settings"
-        >
-          <span className="text-xl">⚙️</span>
-        </button>
+        {activeTab !== 'scorer' && (
+          <button
+            onClick={() => { setIsSettingsOpen(!isSettingsOpen); setIsMenuOpen(false); setShowNotifications(false); }}
+            className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-2xl z-50 ${isSettingsOpen ? 'bg-slate-800 text-white rotate-180 ring-2 ring-slate-600' : 'bg-white/10 backdrop-blur-md text-slate-400 border border-white/5 hover:bg-white/20'
+              }`}
+            aria-label="Settings"
+          >
+            <span className="text-xl">⚙️</span>
+          </button>
+        )}
       </div>
 
 
@@ -198,11 +204,24 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
         <div className="flex flex-col gap-1.5 overflow-y-auto custom-scrollbar flex-1">
+          <button key="home" onClick={() => handleNavClick('home')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'home' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <span className="text-lg">🏠</span><span className="font-black uppercase text-[10px] tracking-widest">Dashboard</span>
+          </button>
+          <button key="media" onClick={() => handleNavClick('media')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'media' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <span className="text-lg">📺</span><span className="font-black uppercase text-[10px] tracking-widest">Media Center</span>
+          </button>
+          {(showCaptainHub || activeViewRole === 'Administrator' || activeViewRole === 'Captain' || profile.role === 'Administrator') && (
+            <button key="captain_hub" onClick={() => handleNavClick('captain_hub')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'captain_hub' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+              <span className="text-lg">🎖️</span><span className="font-black uppercase text-[10px] tracking-widest">Captain's Hub</span>
+            </button>
+          )}
+          {(activeViewRole === 'Administrator' || profile.role === 'Administrator' || activeViewRole === 'Scorer') && (
+            <button key="stats" onClick={() => handleNavClick('stats')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'stats' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+              <span className="text-lg">📊</span><span className="font-black uppercase text-[10px] tracking-widest">Analytics</span>
+            </button>
+          )}
           <button key="my_matches" onClick={() => handleNavClick('my_matches')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'my_matches' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <span className="text-lg">🏏</span><span className="font-black uppercase text-[10px] tracking-widest">My Matches</span>
-          </button>
-          <button key="my_tournaments" onClick={() => handleNavClick('my_tournaments')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'my_tournaments' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
-            <span className="text-lg">🏆</span><span className="font-black uppercase text-[10px] tracking-widest">My Tournaments</span>
           </button>
           <button key="profile" onClick={() => handleNavClick('profile')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <span className="text-lg">👤</span><span className="font-black uppercase text-[10px] tracking-widest">Profile</span>
@@ -216,18 +235,16 @@ export const Layout: React.FC<LayoutProps> = ({
           <button key="scorer" onClick={() => handleNavClick('scorer')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'scorer' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <span className="text-lg">⚡</span><span className="font-black uppercase text-[10px] tracking-widest">Start a Match</span>
           </button>
-          <button key="create_tournament" onClick={() => handleNavClick('create_tournament')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'create_tournament' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
-            <span className="text-lg">⚔️</span><span className="font-black uppercase text-[10px] tracking-widest">Create Tournament</span>
-          </button>
           <button key="register_club" onClick={() => handleNavClick('register_club')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'register_club' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <span className="text-lg">📝</span><span className="font-black uppercase text-[10px] tracking-widest">Register a Club</span>
           </button>
           <button key="following" onClick={() => handleNavClick('following')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'following' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <span className="text-lg">📡</span><span className="font-black uppercase text-[10px] tracking-widest">Following</span>
           </button>
-          <button key="registry" onClick={() => handleNavClick('registry')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'registry' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+          <button key="registry" onClick={() => handleNavClick('registry')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${['registry', 'team_registry'].includes(activeTab) ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <span className="text-lg">👥</span><span className="font-black uppercase text-[10px] tracking-widest">Player/Team Registry</span>
           </button>
+
         </div>
 
         {/* Settings Icon at Bottom */}
@@ -240,14 +257,33 @@ export const Layout: React.FC<LayoutProps> = ({
             <span className="font-black uppercase text-[10px] tracking-widest">Settings</span>
           </button>
 
+          {profile.role === 'Guest' && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={onSignIn}
+                className="py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-all"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={onSignUp}
+                className="py-3 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                Join Now
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 bg-slate-800/50 p-2 rounded-xl border border-white/5">
             <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center font-black text-white text-xs">{profile.name.charAt(0)}</div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black text-white truncate">{profile.name}</p>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{profile.role === 'Guest' ? 'GUEST USER' : 'ADMINISTRATOR'}</p>
+              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{profile.role === 'Guest' ? 'GUEST USER' : (activeViewRole || profile.role).toUpperCase()}</p>
             </div>
             {profile.role !== 'Guest' && <button onClick={onSignOut} className="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-500 transition-colors">🚪</button>}
-            {profile.role === 'Guest' && onSignIn && <button onClick={onSignIn} className="w-6 h-6 flex items-center justify-center text-emerald-400 hover:text-emerald-500 transition-colors">🔑</button>}
+            {profile.role === 'Guest' && onSignIn && (
+              <button onClick={onSignIn} className="w-6 h-6 flex items-center justify-center text-emerald-400 hover:text-emerald-500 transition-colors">🔑</button>
+            )}
           </div>
         </div>
       </nav>
@@ -346,6 +382,16 @@ export const Layout: React.FC<LayoutProps> = ({
             </div>
             <button onClick={() => onToggleSetting('fullScreen')} className={`w-12 h-6 rounded-full transition-colors relative ${settings.fullScreen ? 'bg-indigo-600' : 'bg-slate-600'}`}>
               <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${settings.fullScreen ? 'left-7' : 'left-1'}`} />
+            </button>
+          </div>
+
+          <div className="bg-indigo-900/40 p-4 rounded-2xl flex items-center justify-between border border-indigo-500/30">
+            <div>
+              <div className="text-sm font-bold text-white">Demo Mode 🚀</div>
+              <div className="text-[10px] text-indigo-300/60 uppercase tracking-widest font-black">Fill app with demo data</div>
+            </div>
+            <button onClick={() => onToggleSetting('demoMode')} className={`w-12 h-6 rounded-full transition-colors relative ${settings.demoMode ? 'bg-emerald-500' : 'bg-slate-600'}`}>
+              <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${settings.demoMode ? 'left-7' : 'left-1'}`} />
             </button>
           </div>
 

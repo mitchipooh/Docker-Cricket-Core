@@ -8,9 +8,10 @@ import { FieldView } from './FieldView.tsx';
 interface StatsProps {
   teams: Team[];
   onBack?: () => void;
+  hideHeader?: boolean;
 }
 
-export const StatsAnalytics: React.FC<StatsProps> = ({ teams, onBack }) => {
+export const StatsAnalytics: React.FC<StatsProps> = ({ teams, onBack, hideHeader }) => {
   const [dlsData, setDlsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [dlsForm, setDlsForm] = useState({
@@ -58,15 +59,17 @@ export const StatsAnalytics: React.FC<StatsProps> = ({ teams, onBack }) => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-right-8 duration-500">
-      <header className="flex items-center gap-6">
-        {onBack && (
-          <button onClick={onBack} className="w-12 h-12 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-slate-700 transition-all shadow-lg border border-slate-700">←</button>
-        )}
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white">Advanced Analytics</h1>
-          <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Moneyball Insights & DLS Logic</p>
-        </div>
-      </header>
+      {!hideHeader && (
+        <header className="flex items-center gap-6">
+          {onBack && (
+            <button onClick={onBack} className="w-12 h-12 rounded-full bg-slate-800 text-white flex items-center justify-center hover:bg-slate-700 transition-all shadow-lg border border-slate-700">←</button>
+          )}
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white">Advanced Analytics</h1>
+            <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Moneyball Insights & DLS Logic</p>
+          </div>
+        </header>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Pitch & Field Analysis */}

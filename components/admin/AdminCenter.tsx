@@ -29,12 +29,12 @@ interface AdminProps {
   onUpdateOrgs: (orgs: Organization[]) => void;
   onCreateOrg: (orgData: Partial<Organization>) => void;
   onAddTeam: (orgId: string, teamData: Omit<Team, 'id'>) => void;
-  onRemoveTeam?: (orgId: string, teamId: string) => void; // UPDATED to optional
-  onRemoveTournament?: (orgId: string, tournamentId: string) => void; // NEW
-  onUpdateTournament?: (orgId: string, tournamentId: string, data: Partial<Tournament>) => void; // NEW
-  onUpdateFixture?: (orgId: string, fixtureId: string, data: Partial<MatchFixture>) => void; // NEW
-  onRemoveFixture?: (orgId: string, fixtureId: string) => void; // NEW
-  allOrganizations?: Organization[]; // NEW
+  onRemoveTeam?: (orgId: string, teamId: string) => void;
+  onRemoveTournament?: (orgId: string, tournamentId: string) => void;
+  onUpdateTournament?: (orgId: string, tournamentId: string, data: Partial<Tournament>) => void;
+  onUpdateFixture?: (orgId: string, fixtureId: string, data: Partial<MatchFixture>) => void;
+  onRemoveFixture?: (orgId: string, fixtureId: string) => void;
+  allOrganizations?: Organization[];
   onBulkAddPlayers: (teamId: string, newPlayers: Player[]) => void;
   onAddGroup: (orgId: string, groupName: string) => void;
   onUpdateGroupTeams: (orgId: string, groupId: string, teamIds: string[]) => void;
@@ -54,17 +54,19 @@ interface AdminProps {
   onUpgradeProfile?: () => void;
   onTransferPlayer?: (playerId: string, toTeamId: string) => void;
   currentUserProfile?: UserProfile | null;
-  showCaptainHub?: boolean; // NEW
-  onOpenCaptainHub?: () => void; // NEW
-  onRequestMatchReports?: () => void; // NEW
-  onUpdateProfile?: (profile: UserProfile) => void; // NEW
-  onRequestTransferMarket?: () => void; // [NEW]
-  issues?: GameIssue[]; // NEW
-  onUpdateIssues?: (issues: GameIssue[]) => void; // NEW
-  onSelectHubTeam?: (teamId: string) => void; // NEW
-  onRequestAffiliation?: (targetOrgId: string, applicantOrg: Organization) => void; // NEW
+  showCaptainHub?: boolean;
+  onOpenCaptainHub?: () => void;
+  onRequestMatchReports?: () => void;
+  onUpdateProfile?: (profile: UserProfile) => void;
+  onRequestTransferMarket?: () => void;
+  issues?: GameIssue[];
+  onUpdateIssues?: (issues: GameIssue[]) => void;
+  onSelectHubTeam?: (teamId: string) => void;
+  onRequestAffiliation?: (targetOrgId: string, applicantOrg: Organization) => void;
   onViewOrg?: (orgId: string) => void;
-  onCreateUser?: (user: UserProfile, password: string) => Promise<{ success: boolean; userId?: string; error?: { message: string } }>; // UPDATED to async
+  onCreateUser?: (user: UserProfile, password: string) => Promise<{ success: boolean; userId?: string; error?: { message: string } }>;
+  activeViewRole?: UserProfile['role'];
+  onSwitchViewRole?: (role: UserProfile['role']) => void;
 }
 
 type ViewScope = 'GLOBAL' | 'ORG_LEVEL' | 'TOURNAMENT_LEVEL' | 'HR' | 'MARKET' | 'SPONSORS' | 'REPORTS' | 'ISSUES';
@@ -76,10 +78,11 @@ export const AdminCenter: React.FC<AdminProps> = ({
   following, onToggleFollow, mockGlobalUsers = [], onAddMemberToOrg = () => { }, onProcessApplication, hireableScorers = [],
   currentUserId, onApplyForOrg, onUpgradeProfile, onTransferPlayer, currentUserProfile,
   showCaptainHub, onOpenCaptainHub, onRequestMatchReports, onUpdateProfile,
-  onRequestTransferMarket, // [NEW]
+  onRequestTransferMarket,
   issues = [], onUpdateIssues,
   onRemoveTournament, onUpdateTournament, onUpdateFixture, onRemoveFixture, allOrganizations = [],
-  onSelectHubTeam, onRequestAffiliation, onViewOrg, onCreateUser // NEW
+  onSelectHubTeam, onRequestAffiliation, onViewOrg, onCreateUser,
+  activeViewRole, onSwitchViewRole
 }) => {
   const [viewScope, setViewScope] = useState<ViewScope>('GLOBAL');
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
@@ -133,15 +136,12 @@ export const AdminCenter: React.FC<AdminProps> = ({
   };
 
   const handleAddTeam = () => { if (selectedOrgId && teamForm.name) { onAddTeam(selectedOrgId, { ...teamForm, players: [] }); setModals({ ...modals, addTeam: false }); setTeamForm({ name: '', location: '' }); } };
-  const handleCreateTournament = () => { if (selectedOrgId) { onAddTournament(selectedOrgId, { id: `trn-${Date.now()}`, name: trnForm.name, format: trnForm.format, startDate: trnForm.startDate, endDate: trnForm.endDate, gameStartTime: trnForm.gameStartTime, description: trnForm.description, overs: trnForm.format === 'Test' ? 90 : 20, groups: [], teamIds: [], pointsConfig: trnForm.format === 'Test' ? PRESET_TEST : DEFAULT_POINTS_CONFIG, status: 'Upcoming' }); setModals({ ...modals, addTournament: false }); setTrnForm({ name: '', format: 'T20', startDate: '', endDate: '', gameStartTime: '', description: '' }); } };
+  const handleCreateTournament = () => { if (selectedOrgId) { onAddTournament(selectedOrgId, { id: `trn-${Date.now()}`, name: trnForm.name, format: trnForm.format, startDate: trnForm.startDate, endDate: trnForm.endDate, gameStartTime: trnForm.gameStartTime, description: trnForm.description, overs: trnForm.format === 'Test' ? 90 : 20, groups: [], teamIds: [], pointsConfig: trnForm.format === 'Test' ? PRESET_TEST : DEFAULT_POINTS_CONFIG, status: 'Upcoming', createdBy: currentUserId }); setModals({ ...modals, addTournament: false }); setTrnForm({ name: '', format: 'T20', startDate: '', endDate: '', gameStartTime: '', description: '' }); } };
   const handleTournamentAddGroup = (tournamentId: string, groupName: string) => { if (!activeOrg) return; const newGroup: Group = { id: `grp-${Date.now()}`, name: groupName, teams: [] }; onUpdateOrgs(organizations.map(org => org.id === activeOrg.id ? { ...org, tournaments: org.tournaments.map(t => t.id === tournamentId ? { ...t, groups: [...(t.groups || []), newGroup] } : t) } : org)); };
   const handleTournamentUpdateTeams = (tournamentId: string, groupId: string, teamIds: string[]) => {
     if (!activeOrg) return;
-
-    // Fix: Look up teams from all organizations (including affiliates), not just the active org's direct members
     const allAvailableTeams = organizations.flatMap(o => o.memberTeams);
     const selectedTeams = allAvailableTeams.filter(t => teamIds.includes(t.id));
-
     onUpdateOrgs(organizations.map(org =>
       org.id === activeOrg.id
         ? {
@@ -231,7 +231,6 @@ export const AdminCenter: React.FC<AdminProps> = ({
     setIsResolutionModalOpen(false);
   };
 
-  // Permission Logic (Context: Central Zone)
   const centralZone = organizations.find(o => o.id === 'org-central-zone');
   const currentMember = centralZone?.members.find(m => m.userId === currentUserId);
   const hasPermission = (perm: string) => userRole === 'Administrator' || !!currentMember?.permissions?.[perm];
@@ -251,59 +250,122 @@ export const AdminCenter: React.FC<AdminProps> = ({
         onResolve={handleResolveIssue}
       />
 
-      {/* GLOBAL NAV TABS FOR ADMIN & PERMISSION HOLDERS */}
+      {/* ROLE SWITCHER - Mobile Dropdown / Desktop Grid */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 animate-in slide-in-from-top-4 duration-500">
+        <div>
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-1 italic">Welcome Back, {currentUserProfile?.name}</h2>
+          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            Unified Profile Active
+          </p>
+        </div>
+
+        {/* Mobile Dropdown */}
+        <div className="md:hidden w-full">
+          <select
+            value={activeViewRole}
+            onChange={(e) => onSwitchViewRole && onSwitchViewRole(e.target.value as any)}
+            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 font-black text-slate-900 dark:text-white outline-none focus:ring-2 ring-indigo-500/20"
+          >
+            {['Administrator', 'Scorer', 'Player', 'Umpire', 'Captain', 'Coach'].map(role => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Desktop Buttons */}
+        <div className="hidden md:flex flex-wrap bg-slate-50 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-inner gap-1">
+          {['Administrator', 'Scorer', 'Player', 'Umpire', 'Captain', 'Coach'].map(role => (
+            <button
+              key={role}
+              onClick={() => onSwitchViewRole && onSwitchViewRole(role as any)}
+              className={`px-4 md:px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeViewRole === role ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+            >
+              {role}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* GLOBAL NAV TABS - Mobile Dropdown / Desktop Tabs */}
       {viewScope === 'GLOBAL' && (userRole === 'Administrator' || hasPermission('view_protests')) && (
-        <div className="flex gap-4 mb-8">
-          <button onClick={() => setViewScope('GLOBAL')} className="text-2xl font-black text-slate-900 border-b-4 border-slate-900 pb-1">Dashboard</button>
-          {userRole === 'Administrator' && (
-            <>
-              <button onClick={() => setViewScope('HR')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all">HR & Talent</button>
-              <button onClick={() => setViewScope('MARKET')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all">Transfer Market</button>
-              <button onClick={() => setViewScope('SPONSORS')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all">Sponsors</button>
-              {organizations.some(o => o.members.length === 0) && (
-                <button
-                  onClick={() => {
-                    if (confirm("Found orphaned organizations. Claim them to your account?")) {
-                      const claimedOrgs = organizations.map(o => {
-                        if (o.members.length === 0) {
-                          return {
-                            ...o,
-                            members: [{
-                              userId: currentUserId || 'unknown',
-                              name: currentUserProfile?.name || 'Admin',
-                              handle: currentUserProfile?.handle || '@admin',
-                              role: 'Administrator' as const,
-                              addedAt: Date.now()
-                            }]
-                          };
-                        }
-                        return o;
-                      });
-                      onUpdateOrgs(claimedOrgs);
-                      alert("Orphaned organizations claimed! They should now appear in your dashboard.");
-                    }
-                  }}
-                  className="text-2xl font-black text-red-500 hover:text-red-700 border-b-4 border-transparent hover:border-red-200 pb-1 transition-all animate-pulse"
-                >
-                  ⚠ Fix Profile Pinning
-                </button>
-              )}
-            </>
-          )}
-          {hasPermission('view_protests') && (
-            <button onClick={() => setViewScope('ISSUES')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all relative">
-              Issues
-              <span className="absolute -top-1 -right-2 w-3 h-3 bg-indigo-500 rounded-full border-2 border-white"></span>
-            </button>
-          )}
-          {userRole === 'Administrator' && (
-            <button onClick={() => setViewScope('REPORTS')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 relative transition-all">
-              Reports
-              {globalFixtures.some(f => f.reportSubmission?.status === 'PENDING') && (
-                <span className="absolute -top-1 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-              )}
-            </button>
-          )}
+        <div className="mb-8">
+          {/* Mobile Dropdown */}
+          <div className="md:hidden mb-4">
+            <div className="relative">
+              <select
+                value={viewScope}
+                onChange={(e) => setViewScope(e.target.value as ViewScope)}
+                className="w-full appearance-none bg-slate-900 text-white rounded-xl px-6 py-4 font-black uppercase tracking-widest outline-none border border-slate-800 shadow-lg"
+              >
+                <option value="GLOBAL">Dashboard</option>
+                {userRole === 'Administrator' && (
+                  <>
+                    <option value="HR">HR & Talent</option>
+                    <option value="MARKET">Transfer Market</option>
+                    <option value="SPONSORS">Sponsors</option>
+                    <option value="REPORTS">Reports {globalFixtures.some(f => f.reportSubmission?.status === 'PENDING') ? '(Pending!)' : ''}</option>
+                  </>
+                )}
+                {hasPermission('view_protests') && <option value="ISSUES">Issues</option>}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white pointer-events-none text-xs">▼</div>
+            </div>
+          </div>
+
+          {/* Desktop Tabs */}
+          <div className="hidden md:flex gap-4">
+            <button onClick={() => setViewScope('GLOBAL')} className="text-2xl font-black text-slate-900 border-b-4 border-slate-900 pb-1">Dashboard</button>
+            {userRole === 'Administrator' && (
+              <>
+                <button onClick={() => setViewScope('HR')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all">HR & Talent</button>
+                <button onClick={() => setViewScope('MARKET')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all">Transfer Market</button>
+                <button onClick={() => setViewScope('SPONSORS')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all">Sponsors</button>
+                {organizations.some(o => o.members.length === 0) && (
+                  <button
+                    onClick={() => {
+                      if (confirm("Found orphaned organizations. Claim them to your account?")) {
+                        const claimedOrgs = organizations.map(o => {
+                          if (o.members.length === 0) {
+                            return {
+                              ...o,
+                              members: [{
+                                userId: currentUserId || 'unknown',
+                                name: currentUserProfile?.name || 'Admin',
+                                handle: currentUserProfile?.handle || '@admin',
+                                role: 'Administrator' as const,
+                                addedAt: Date.now()
+                              }]
+                            };
+                          }
+                          return o;
+                        });
+                        onUpdateOrgs(claimedOrgs);
+                        alert("Orphaned organizations claimed! They should now appear in your dashboard.");
+                      }
+                    }}
+                    className="text-2xl font-black text-red-500 hover:text-red-700 border-b-4 border-transparent hover:border-red-200 pb-1 transition-all animate-pulse"
+                  >
+                    ⚠ Fix Profile Pinning
+                  </button>
+                )}
+              </>
+            )}
+            {hasPermission('view_protests') && (
+              <button onClick={() => setViewScope('ISSUES')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 transition-all relative">
+                Issues
+                <span className="absolute -top-1 -right-2 w-3 h-3 bg-indigo-500 rounded-full border-2 border-white"></span>
+              </button>
+            )}
+            {userRole === 'Administrator' && (
+              <button onClick={() => setViewScope('REPORTS')} className="text-2xl font-black text-slate-300 hover:text-slate-500 border-b-4 border-transparent hover:border-slate-200 pb-1 relative transition-all">
+                Reports
+                {globalFixtures.some(f => f.reportSubmission?.status === 'PENDING') && (
+                  <span className="absolute -top-1 -right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -425,7 +487,7 @@ export const AdminCenter: React.FC<AdminProps> = ({
           onRequestTransferMarket={onRequestTransferMarket}
           onViewOrg={onViewOrg}
           onCreateUser={onCreateUser}
-          globalUsers={mockGlobalUsers} // NEW
+          globalUsers={mockGlobalUsers}
           onRemoveFixture={(fId) => {
             const org = organizations.find(o => o.fixtures.some(f => f.id === fId));
             if (org && onRemoveFixture) {
@@ -594,4 +656,3 @@ export const AdminCenter: React.FC<AdminProps> = ({
     </div>
   );
 };
-

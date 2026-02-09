@@ -28,6 +28,7 @@ import { TeamRegistry } from './components/search/TeamRegistry.tsx'; // Import T
 import { UmpireProfile } from './components/umpire/UmpireProfile.tsx'; // Import Umpire Profile
 import { ReportVerification } from './components/admin/ReportVerification.tsx';
 import { TransferMarket } from './components/search/TransferMarket.tsx'; // [NEW] Transfer Market
+import { ScoringConflictModal } from './components/modals/ScoringConflictModal.tsx';
 import {
     updateFixture, fetchGlobalSync,
     pushGlobalSync,
@@ -79,6 +80,7 @@ const App: React.FC = () => {
         orgs, standaloneMatches, mediaPosts, allTeams, profile, settings, following,
         setOrgs, setStandaloneMatches, setMediaPosts, setAllTeams,
         setOrgsSilent, setStandaloneMatchesSilent, // Destructure Silent Setters
+        issues, setIssues, matchReports, setMatchReports, umpireReports, setUmpireReports,
         updateProfile, updateSettings, updateFollowing,
         pullNow, forcePush
     } = useData();
@@ -105,10 +107,14 @@ const App: React.FC = () => {
     const [selectedHubTeamId, setSelectedHubTeamId] = useState<string | null>(null); // NEW: Overrides myTeam for Admins
     const [editingProfile, setEditingProfile] = useState(false);
     const [isApplyingForOrg, setIsApplyingForOrg] = useState(false);
-    const [issues, setIssues] = useState<GameIssue[]>([]);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
     const [profileSetupMode, setProfileSetupMode] = useState<'CREATE' | 'LOGIN'>('CREATE');
+    const [trnCreationMode, setTrnCreationMode] = useState<'SELECT' | 'STANDALONE'>('SELECT');
+    // Unified Profile & Scoring Conflicts
+    const [activeViewRole, setActiveViewRole] = useState<UserProfile['role']>(profile.role);
+    const [conflictMatches, setConflictMatches] = useState<MatchFixture[]>([]);
+    const [showConflictModal, setShowConflictModal] = useState(false);
 
     // Global User Directory (Client-side simulation)
     const [globalUsers, setGlobalUsers] = useState<UserProfile[]>([]);
@@ -122,6 +128,9 @@ const App: React.FC = () => {
             getUserProfile().then(authProfile => {
                 if (authProfile) {
                     updateProfile(authProfile);
+                    if (activeViewRole === 'Guest') {
+                        setActiveViewRole(authProfile.role);
+                    }
                 }
             });
         }
@@ -138,11 +147,9 @@ const App: React.FC = () => {
 
     // --- INITIALIZATION EFFECT ---
     useEffect(() => {
-        const logoSrc = window.wpApiSettings?.plugin_url
-            ? `${window.wpApiSettings.plugin_url}logo.jpg`
-            : 'logo.jpg';
+        const logoPath = window.wpApiSettings?.plugin_url ? `${window.wpApiSettings.plugin_url}logo.jpg` : 'logo.jpg';
         const img = new Image();
-        img.src = logoSrc;
+        img.src = logoPath;
         const timer = setTimeout(() => {
             setIsAppLoading(false);
         }, 2500);
@@ -201,7 +208,7 @@ const App: React.FC = () => {
 
     // --- AUTO ARCHIVE LOGIC ---
     useEffect(() => {
-        const archiveThreshold = Date.now() - (3 * 24 * 60 * 60 * 1000); // 3 Days Ago
+        const archiveThreshold = Date.now() - (30 * 24 * 60 * 60 * 1000); // 30 Days Ago
         let needsUpdate = false;
 
         const newStandalone = standaloneMatches.map(m => {
@@ -384,6 +391,32 @@ const App: React.FC = () => {
         }
     }, [activeMatch, orgs, allTeams]);
 
+    const handleRequestSetup = (fixture: MatchFixture | null = null) => {
+        const myActiveMatches = allFixtures.filter(f => f.status === 'Live' && f.scorerId === profile.id);
+        if (myActiveMatches.length > 0) {
+            setConflictMatches(myActiveMatches);
+            setPendingSetupFixture(fixture);
+            setShowConflictModal(true);
+        } else {
+            setPendingSetupFixture(fixture);
+            setActiveTab('setup');
+        }
+    };
+
+    const handleCloseAllConflicts = async () => {
+        const nextOrgs = orgs.map(org => ({
+            ...org,
+            fixtures: org.fixtures.map(f => conflictMatches.some(cm => cm.id === f.id) ? { ...f, status: 'Completed' as const } : f)
+        }));
+        setOrgs(nextOrgs);
+
+        const nextStandalone = standaloneMatches.map(m => conflictMatches.some(cm => cm.id === m.id) ? { ...m, status: 'Completed' as const } : m);
+        setStandaloneMatches(nextStandalone);
+
+        setShowConflictModal(false);
+        setActiveTab('setup');
+    };
+
     const handleSetupComplete = (newMatch: MatchFixture) => {
         let nextMatches = [...standaloneMatches];
         let nextOrgs = [...orgs];
@@ -471,6 +504,13 @@ const App: React.FC = () => {
         const nextOrgs = orgs.map(org => org.id === orgId ? { ...org, memberTeams: [...org.memberTeams, newTeam] } : org);
         setOrgs(nextOrgs);
         forcePush(); // Persist to database
+    };
+
+    const handleRemoveTeam = async (orgId: string, teamId: string) => {
+        await removeTeamFromOrg(orgId, teamId);
+        const nextOrgs = orgs.map(o => o.id === orgId ? { ...o, memberTeams: o.memberTeams.filter(t => t.id !== teamId) } : o);
+        setOrgs(nextOrgs);
+        forcePush();
     };
 
     const handleRemoveTournament = async (orgId: string, tournamentId: string) => {
@@ -1047,11 +1087,48 @@ const App: React.FC = () => {
         alert('Report Rejected.');
     };
 
+    const handleAcceptFixture = async (fixtureId: string) => {
+        const nextOrgs = orgs.map(o => ({
+            ...o,
+            fixtures: o.fixtures.map(f => f.id === fixtureId ? { ...f, scorerId: profile.id } : f)
+        }));
+        setOrgs(nextOrgs);
+        forcePush();
+        alert('Fixture Accepted!');
+    };
+
     const handleSwitchTab = (tab: typeof activeTab) => {
         if (tab !== 'captain_hub') {
             setSelectedHubTeamId(null);
         }
         setActiveTab(tab);
+    };
+
+    const handleSwitchViewRole = (role: UserProfile['role']) => {
+        setActiveViewRole(role);
+        // Automatic navigation based on role
+        switch (role) {
+            case 'Administrator':
+                setActiveTab('home');
+                break;
+            case 'Captain':
+                setActiveTab('captain_hub');
+                break;
+            case 'Scorer':
+                setActiveTab('career'); // Scorer Profile
+                break;
+            case 'Player':
+                setActiveTab('career'); // Player Career
+                break;
+            case 'Umpire':
+                setActiveTab('umpire_hub');
+                break;
+            case 'Coach':
+                setActiveTab('home'); // Coaches use Admin Hub for now
+                break;
+            default:
+                setActiveTab('home');
+        }
     };
 
     const handleSwitchProfile = (type: 'ADMIN' | 'SCORER' | 'FAN' | 'COACH' | 'UMPIRE' | 'PLAYER' | 'GUEST' | 'CAPTAIN') => {
@@ -1193,14 +1270,14 @@ const App: React.FC = () => {
     };
 
     if (isAppLoading) {
-        const logoSrc = window.wpApiSettings?.plugin_url ? `${window.wpApiSettings.plugin_url}logo.svg` : 'logo.svg';
+        const logoPath = window.wpApiSettings?.plugin_url ? `${window.wpApiSettings.plugin_url}logo.jpg` : 'logo.jpg';
         return (
             <div className="h-screen w-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
 
                 <div className="relative z-10 flex flex-col items-center animate-in fade-in zoom-in duration-700">
                     <img
-                        src="/cricket-core-logo.jpg"
+                        src={logoPath}
                         alt="Cricket Core Pro"
                         className="w-48 h-48 md:w-64 md:h-64 object-contain mb-8 drop-shadow-2xl animate-pulse"
                     />
@@ -1262,10 +1339,23 @@ const App: React.FC = () => {
                     setProfileSetupMode('LOGIN');
                     setEditingProfile(true);
                 }}
+                onSignUp={() => {
+                    setProfileSetupMode('CREATE');
+                    setEditingProfile(true);
+                }}
                 onSwitchProfile={handleSwitchProfile}
                 showCaptainHub={true}
+                activeViewRole={activeViewRole}
             >
                 <ApplicationModal isOpen={isApplyingForOrg} onClose={() => setIsApplyingForOrg(false)} organizations={orgs.filter(o => !profile.joinedClubIds?.includes(o.id))} onApply={handleApplyForOrg} />
+
+                <ScoringConflictModal
+                    isOpen={showConflictModal}
+                    onClose={() => setShowConflictModal(false)}
+                    matches={conflictMatches}
+                    onCloseAllAndContinue={handleCloseAllConflicts}
+                    onIgnoreAndContinue={() => { setShowConflictModal(false); setActiveTab('setup'); }}
+                />
 
                 <div id="csp-view-container" className="h-full flex flex-col min-h-0">
                     <TeamProfileModal
@@ -1335,21 +1425,15 @@ const App: React.FC = () => {
                             organizations={orgs} standaloneMatches={standaloneMatches} userRole={profile.role}
                             onStartMatch={(m) => {
                                 if (m.status === 'Scheduled') {
-                                    setPendingSetupFixture(m);
-                                    setActiveTab('setup');
+                                    handleRequestSetup(m);
                                 } else {
                                     setActiveMatch(m);
                                     setActiveTab('scorer');
                                 }
-                            }} onViewMatch={(m) => { setViewMatchId(m.id); setActiveTab('media'); }} onRequestSetup={() => { setPendingSetupFixture(null); setActiveTab('setup'); }}
+                            }} onViewMatch={(m) => { setViewMatchId(m.id); setActiveTab('media'); }} onRequestSetup={() => handleRequestSetup(null)}
                             onUpdateOrgs={setOrgs} onCreateOrg={handleCreateOrg} onAddTeam={handleAddTeam}
                             onProcessApplication={handleProcessApplication}
-                            onRemoveTeam={async (oid, tid) => {
-                                await removeTeamFromOrg(oid, tid);
-                                const nextOrgs = orgs.map(o => o.id === oid ? { ...o, memberTeams: o.memberTeams.filter(t => t.id !== tid) } : o);
-                                setOrgs(nextOrgs);
-                                forcePush();
-                            }}
+                            onRemoveTeam={handleRemoveTeam}
                             onRemoveTournament={handleRemoveTournament}
                             onUpdateTournament={handleUpdateTournament}
                             onUpdateFixture={handleUpdateFixture}
@@ -1370,6 +1454,8 @@ const App: React.FC = () => {
                             onViewOrg={(orgId) => { setViewingOrgId(orgId); setActiveTab('media'); }}
                             onCreateUser={handleCreateUser}
                             mockGlobalUsers={globalUsers} // FIX: Pass global users for search
+                            activeViewRole={activeViewRole}
+                            onSwitchViewRole={handleSwitchViewRole}
                         />
 
                     )}
@@ -1378,7 +1464,7 @@ const App: React.FC = () => {
                         <div className="max-w-4xl mx-auto p-4 content-container">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-widest">My Matches</h2>
-                                <button onClick={() => setActiveTab('scorer')} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-md">Start New</button>
+                                <button onClick={() => handleRequestSetup(null)} className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-md">Start New</button>
                             </div>
 
                             {/* Filter standalone matches or matches where user is player/captain */}
@@ -1388,7 +1474,7 @@ const App: React.FC = () => {
                                     // For simplicity, checking if user's team is involved
                                     const myTeamIds = allTeams.filter(t => t.players.some(p => p.id === profile.id)).map(t => t.id);
                                     return myTeamIds.includes(f.teamAId) || myTeamIds.includes(f.teamBId) || f.scorerId === profile.id || f.umpires?.includes(profile.id);
-                                }).sort((a, b) => b.date - a.date);
+                                }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
                                 if (myMatches.length === 0) {
                                     return (
@@ -1423,8 +1509,53 @@ const App: React.FC = () => {
                     )}
 
                     {activeTab === 'my_tournaments' && (
-                        <div className="max-w-7xl mx-auto p-4">
-                            <OrganizationView organizations={orgs} onUpdateOrg={(id, d) => { setOrgs(orgs.map(o => o.id === id ? { ...o, ...d } : o)); forcePush(); }} viewingOrgId={null} onViewOrg={() => { }} onCreateOrg={handleCreateOrg} onDeleteOrg={() => { }} profile={profile} onAddTeam={handleAddTeam} onAddFixture={handleUpdateFixture} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} onAddTournament={(oid, t) => { setOrgs(orgs.map(o => o.id === oid ? { ...o, tournaments: [...o.tournaments, t] } : o)); forcePush(); }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} allTeams={allTeams} onProcessApplication={handleProcessApplication} onSendInvite={handleSendInvite} onRequestAffiliation={handleRequestAffiliation} />
+                        <div className="max-w-4xl mx-auto p-4 content-container">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-widest italic">My Tournaments</h2>
+                                <button onClick={() => setActiveTab('create_tournament')} className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg">New Tournament</button>
+                            </div>
+
+                            {(() => {
+                                // Find all tournaments created by user across all organizations
+                                const myTournaments = orgs.flatMap(org =>
+                                    (org.tournaments || []).filter(t => t.createdBy === profile.id).map(t => ({ ...t, orgName: org.name }))
+                                ).sort((a, b) => (b.startDate ? new Date(b.startDate).getTime() : 0) - (a.startDate ? new Date(a.startDate).getTime() : 0));
+
+                                if (myTournaments.length === 0) {
+                                    return (
+                                        <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-700">
+                                            <div className="text-4xl mb-4">🏆</div>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">No Tournaments Found</h3>
+                                            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Tournaments you create will appear here.</p>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <div className="grid gap-4">
+                                        {myTournaments.map(t => (
+                                            <div key={t.id} className="group bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all cursor-pointer" onClick={() => { setViewingOrgId(orgs.find(o => o.tournaments.some(trn => trn.id === t.id))?.id || null); setActiveTab('my_tournaments'); /* This needs proper navigation to ORG > TRN view */ }}>
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <h3 className="font-black text-lg text-slate-900 dark:text-white leading-tight mb-1 group-hover:text-indigo-600 transition-colors">
+                                                            {t.orgName} - {t.name}
+                                                        </h3>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{t.format}</span>
+                                                            <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.status || 'Draft'}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">{t.startDate ? new Date(t.startDate).toLocaleDateString() : 'N/A'}</p>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Start Date</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     )}
 
@@ -1441,26 +1572,212 @@ const App: React.FC = () => {
 
                     {activeTab === 'my_clubs' && (
                         <div className="max-w-7xl mx-auto p-4">
-                            <OrganizationView organizations={orgs.filter(o => profile.joinedClubIds?.includes(o.id))} onUpdateOrg={(id, d) => { setOrgs(orgs.map(o => o.id === id ? { ...o, ...d } : o)); forcePush(); }} viewingOrgId={null} onViewOrg={setViewingOrgId} onCreateOrg={handleCreateOrg} onDeleteOrg={() => { }} profile={profile} onAddTeam={handleAddTeam} onAddFixture={handleUpdateFixture} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} onAddTournament={(oid, t) => { setOrgs(orgs.map(o => o.id === oid ? { ...o, tournaments: [...o.tournaments, t] } : o)); forcePush(); }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} allTeams={allTeams} onProcessApplication={handleProcessApplication} onSendInvite={handleSendInvite} onRequestAffiliation={handleRequestAffiliation} />
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-widest italic mb-6 px-4">My Managed Clubs</h2>
+                            <div className="grid grid-cols-1 gap-8">
+                                {orgs.filter(o => o.createdBy === profile.id).map(org => (
+                                    <div key={org.id} className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                                        <OrganizationView
+                                            organization={org}
+                                            userRole="Administrator"
+                                            onBack={() => { }}
+                                            onViewTournament={(tId) => setViewingTournamentId(tId)}
+                                            onViewPlayer={setViewingPlayerId as any}
+                                            onRequestAddTeam={() => setViewingOrgId(org.id)}
+                                            onRequestAddTournament={() => setViewingOrgId(org.id)}
+                                            players={org.memberTeams.flatMap(t => t.players.map(p => ({ ...p, teamName: t.name, teamId: t.id, orgId: org.id, orgName: org.name })))}
+                                            onViewTeam={setViewingTeamId}
+                                            isFollowed={following.orgs.includes(org.id)}
+                                            onToggleFollow={() => toggleFollowing('ORG', org.id)}
+                                            globalUsers={[]}
+                                            onAddMember={() => { }}
+                                            onUpdateOrg={(id, d) => { setOrgs(orgs.map(o => o.id === id ? { ...o, ...d } : o)); forcePush(); }}
+                                            onRemoveTeam={handleRemoveTeam}
+                                            onRemoveTournament={handleRemoveTournament}
+                                            onUpdateTournament={handleUpdateTournament}
+                                            onRemoveFixture={handleRemoveFixture}
+                                            onProcessApplication={handleProcessApplication}
+                                            allOrganizations={orgs}
+                                            currentUserProfile={profile}
+                                            onUpdateFixture={handleUpdateFixture}
+                                            onApplyForOrg={handleApplyForOrg}
+                                            onRequestAffiliation={handleRequestAffiliation}
+                                            onSelectHubTeam={setSelectedHubTeamId}
+                                            onCreateUser={async () => ({ success: false })}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
+                    {activeTab === 'career' && (
+                        <div className="max-w-7xl mx-auto p-4 md:p-8">
+                            {activeViewRole === 'Scorer' ? (
+                                <ScorerProfile
+                                    profile={profile}
+                                    fixtures={allFixtures}
+                                    onUpdateProfile={updateProfile}
+                                    onAcceptFixture={handleAcceptFixture}
+                                    onBack={() => handleSwitchTab('media')}
+                                />
+                            ) : (
+                                <PlayerCareer
+                                    profile={profile}
+                                    onUpdateProfile={updateProfile}
+                                    showCaptainHub={profile.role === 'Administrator' || activeViewRole === 'Captain'}
+                                    onOpenCaptainHub={() => handleSwitchTab('captain_hub')}
+                                    onBack={() => handleSwitchTab('media')}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'umpire_hub' && (
+                        <UmpireProfile
+                            profile={profile}
+                            fixtures={allFixtures}
+                            organizations={orgs}
+                            allTeams={allTeams}
+                            onBack={() => handleSwitchTab('media')}
+                            onCreateFixture={() => setActiveTab('setup')}
+                            onSubmitReport={(report) => {
+                                handleSubmitUmpireReport(report);
+                                alert('Umpire Report Submitted!');
+                            }}
+                        />
+                    )}
+
                     {activeTab === 'create_tournament' && (
-                        <div className="max-w-7xl mx-auto p-4">
-                            <h2 className="text-2xl font-black text-indigo-400 mb-6 uppercase tracking-widest">Create Tournament</h2>
-                            <AdminCenter organizations={orgs} standaloneMatches={[]} userRole="Administrator" onStartMatch={() => { }} onViewMatch={() => { }} onRequestSetup={() => { }} onUpdateOrgs={setOrgs} onCreateOrg={handleCreateOrg} onAddTeam={handleAddTeam} onProcessApplication={handleProcessApplication} onRemoveTeam={() => { }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} allOrganizations={orgs} onBulkAddPlayers={() => { }} onAddGroup={() => { }} onUpdateGroupTeams={() => { }} onAddTournament={(oid, t) => { setOrgs(orgs.map(o => o.id === oid ? { ...o, tournaments: [...o.tournaments, t] } : o)); forcePush(); alert('Tournament Created!'); setActiveTab('my_tournaments'); }} mediaPosts={[]} onAddMediaPost={() => { }} onViewTeam={() => { }} onOpenMediaStudio={() => { }} following={{ teams: [], players: [], orgs: [] }} onToggleFollow={() => { }} hireableScorers={[]} currentUserId={profile.id} onApplyForOrg={handleApplyForOrg} currentUserProfile={profile} showCaptainHub={false} onOpenCaptainHub={() => { }} onRequestMatchReports={() => { }} onRequestTransferMarket={() => { }} onUpdateProfile={() => { }} issues={[]} onUpdateIssues={() => { }} onRequestAffiliation={() => { }} onViewOrg={() => { }} onCreateUser={() => { }} mockGlobalUsers={[]} activeTab="tournaments" />
+                        <div className="max-w-4xl mx-auto p-6 md:p-12">
+                            {trnCreationMode === 'SELECT' ? (
+                                <>
+                                    <div className="text-center mb-12">
+                                        <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-3">Launch Tournament</h2>
+                                        <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">Choose your organization or start standalone</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                                        {/* Option 1: Standalone */}
+                                        <div className="group bg-white dark:bg-slate-900 p-10 rounded-[3rem] border-2 border-slate-100 dark:border-slate-800 shadow-xl hover:shadow-2xl hover:border-indigo-500/30 transition-all cursor-pointer overflow-hidden relative" onClick={() => setTrnCreationMode('STANDALONE')}>
+                                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-3xl mb-8 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">⚡</div>
+                                            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-3">Standalone</h3>
+                                            <p className="text-slate-500 text-sm font-bold leading-relaxed">
+                                                Perfect for exhibition matches or informal multi-day series without complex governing bodies.
+                                            </p>
+                                        </div>
+
+                                        {/* Option 2: Organization-bound */}
+                                        <div className="group bg-slate-900 dark:bg-indigo-950 p-10 rounded-[3rem] shadow-2xl hover:shadow-indigo-500/20 hover:scale-[1.02] transition-all cursor-pointer overflow-hidden relative" onClick={() => { setActiveTab('my_clubs'); }}>
+                                            <div className="absolute top-0 right-0 p-6 flex gap-1 opacity-20">
+                                                {[1, 2, 3].map(i => <div key={i} className="w-4 h-4 rounded-full bg-white"></div>)}
+                                            </div>
+                                            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-3xl mb-8 group-hover:bg-white group-hover:text-slate-900 transition-all">🏢</div>
+                                            <h3 className="text-2xl font-black text-white mb-3">Via Organization</h3>
+                                            <p className="text-slate-400 text-sm font-bold leading-relaxed">
+                                                Launch official leagues, manage multiple groups, and track full affiliation history under a club or board.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 flex items-center justify-center gap-6">
+                                        <div className="text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Need a new organization?</div>
+                                        <button onClick={() => setActiveTab('register_club')} className="px-8 py-3 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:shadow-md transition-all shadow-sm">Register Club</button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div>
+                                    <button onClick={() => setTrnCreationMode('SELECT')} className="mb-6 text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:text-indigo-500 transition-colors flex items-center gap-2">← Back to Options</button>
+                                    <h2 className="text-2xl font-black text-indigo-400 mb-6 uppercase tracking-widest italic">Create Standalone Tournament</h2>
+                                    <AdminCenter
+                                        organizations={[]}
+                                        standaloneMatches={standaloneMatches}
+                                        userRole="Administrator"
+                                        onStartMatch={() => { }}
+                                        onViewMatch={(m) => { setViewMatchId(m.id); setActiveTab('media'); }}
+                                        onRequestSetup={() => setActiveTab('setup')}
+                                        onUpdateOrgs={() => { }}
+                                        onCreateOrg={() => { }}
+                                        onAddTeam={() => { }}
+                                        onAddTournament={(oid, t) => {
+                                            // For standalone, we might need a special container or just add to matching org if exists
+                                            // But standard user request says "regardless of organization"
+                                            // We'll create a hidden 'Standalone' org or handle separately.
+                                            // For now, let's just use the first user-created org or create one if none.
+                                            const myOrg = orgs.find(o => o.createdBy === profile.id);
+                                            if (myOrg) {
+                                                setOrgs(orgs.map(o => o.id === myOrg.id ? { ...o, tournaments: [...o.tournaments, t] } : o));
+                                            } else {
+                                                // Create a default org for them
+                                                handleCreateOrg({ name: 'Personal Tournaments' });
+                                                // We'd need to wait for state update or use setOrgs directly with the new item
+                                            }
+                                            forcePush();
+                                            alert('Standalone Tournament Created!');
+                                            setActiveTab('my_tournaments');
+                                            setTrnCreationMode('SELECT');
+                                        }}
+                                        mediaPosts={[]}
+                                        onAddMediaPost={() => { }}
+                                        onViewTeam={setViewingTeamId}
+                                        onOpenMediaStudio={() => { }}
+                                        following={following}
+                                        onToggleFollow={toggleFollowing}
+                                        currentUserId={profile.id}
+                                        currentUserProfile={profile}
+                                        onBulkAddPlayers={() => { }}
+                                        onAddGroup={() => { }}
+                                        onUpdateGroupTeams={() => { }}
+                                        onUpdateFixture={handleUpdateFixture}
+                                        onRemoveFixture={handleRemoveFixture}
+                                        onUpdateTournament={handleUpdateTournament}
+                                        onRemoveTournament={handleRemoveTournament}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {activeTab === 'register_club' && (
                         <div className="max-w-7xl mx-auto p-4">
                             <h2 className="text-2xl font-black text-indigo-400 mb-6 uppercase tracking-widest">Register New Club</h2>
-                            <AdminCenter organizations={orgs} standaloneMatches={[]} userRole="Administrator" onStartMatch={() => { }} onViewMatch={() => { }} onRequestSetup={() => { }} onUpdateOrgs={setOrgs} onCreateOrg={(o) => { handleCreateOrg(o); alert('Club Registered!'); setActiveTab('my_clubs'); }} onAddTeam={handleAddTeam} onProcessApplication={handleProcessApplication} onRemoveTeam={() => { }} onRemoveTournament={handleRemoveTournament} onUpdateTournament={handleUpdateTournament} onUpdateFixture={handleUpdateFixture} onRemoveFixture={handleRemoveFixture} allOrganizations={orgs} onBulkAddPlayers={() => { }} onAddGroup={() => { }} onUpdateGroupTeams={() => { }} onAddTournament={() => { }} mediaPosts={[]} onAddMediaPost={() => { }} onViewTeam={() => { }} onOpenMediaStudio={() => { }} following={{ teams: [], players: [], orgs: [] }} onToggleFollow={() => { }} hireableScorers={[]} currentUserId={profile.id} onApplyForOrg={handleApplyForOrg} currentUserProfile={profile} showCaptainHub={false} onOpenCaptainHub={() => { }} onRequestMatchReports={() => { }} onRequestTransferMarket={() => { }} onUpdateProfile={() => { }} issues={[]} onUpdateIssues={() => { }} onRequestAffiliation={() => { }} onViewOrg={() => { }} onCreateUser={() => { }} mockGlobalUsers={[]} activeTab="organizations" />
+                            <AdminCenter
+                                organizations={orgs}
+                                standaloneMatches={[]}
+                                userRole="Administrator"
+                                onStartMatch={() => { }}
+                                onViewMatch={() => { }}
+                                onRequestSetup={() => { }}
+                                onUpdateOrgs={setOrgs}
+                                onCreateOrg={(o) => { handleCreateOrg(o); alert('Club Registered!'); setActiveTab('my_clubs'); }}
+                                onAddTeam={handleAddTeam}
+                                onProcessApplication={handleProcessApplication}
+                                onRemoveTeam={() => { }}
+                                onRemoveTournament={handleRemoveTournament}
+                                onUpdateTournament={handleUpdateTournament}
+                                onUpdateFixture={handleUpdateFixture}
+                                onRemoveFixture={handleRemoveFixture}
+                                allOrganizations={orgs}
+                                onBulkAddPlayers={() => { }}
+                                onAddGroup={() => { }}
+                                onUpdateGroupTeams={() => { }}
+                                onAddTournament={() => { }}
+                                mediaPosts={[]}
+                                onAddMediaPost={() => { }}
+                                onViewTeam={() => { }}
+                                onOpenMediaStudio={() => { }}
+                                following={{ teams: [], players: [], orgs: [] }}
+                                onToggleFollow={() => { }}
+                                currentUserId={profile.id}
+                                onApplyForOrg={handleApplyForOrg}
+                                currentUserProfile={profile}
+                                onCreateUser={async () => ({ success: false })}
+                            />
                         </div>
                     )}
 
                     {activeTab === 'following' && (
-                        <MediaCenter onBack={() => setActiveTab('home')} fixtures={allFixtures} teams={allTeams} players={allPlayers} mediaPosts={mediaPosts} onAddMediaPost={handleAddMediaPost} onUpdatePost={handleUpdateMediaPost} onDeletePost={handleDeleteMediaPost} following={following} onToggleFollow={toggleFollowing} onViewTeam={setViewingTeamId} onViewPlayer={(p) => setViewingPlayerId(p.id)} userRole={profile.role} currentProfile={profile} organizations={orgs} viewingOrgId={null} initialTab="following" />
+                        <MediaCenter onBack={() => setActiveTab('home')} fixtures={allFixtures} teams={allTeams} players={allPlayers} mediaPosts={mediaPosts} onAddMediaPost={handleAddMediaPost} onUpdatePost={handleUpdateMediaPost} onDeletePost={handleDeleteMediaPost} following={following} onToggleFollow={toggleFollowing} onViewTeam={setViewingTeamId} onViewPlayer={(p) => setViewingPlayerId(p.id)} userRole={profile.role} currentProfile={profile} organizations={orgs} viewingOrgId={null} initialTab="FOLLOWING" />
                     )}
 
                     {activeTab === 'my_club' && myClubOrg && (
@@ -1563,32 +1880,15 @@ const App: React.FC = () => {
                         />
                     )}
 
-                    {activeTab === 'career' && profile.role !== 'Player' && (
-                        <div className="max-w-4xl mx-auto p-6 md:p-12 min-h-screen">
-                            <PlayerCareer
-                                profile={profile}
-                                onUpdateProfile={updateProfile}
-                                showCaptainHub={true}
-                                onOpenCaptainHub={() => setActiveTab('captain_hub')}
+                    {activeTab === 'stats' && (
+                        <div className="max-w-7xl mx-auto p-4">
+                            <StatsAnalytics
+                                teams={allTeams}
+                                onBack={() => setActiveTab('home')}
                             />
                         </div>
                     )}
 
-                    {activeTab === 'career' && profile.role === 'Player' && (
-                        <PlayerCareer
-                            profile={profile}
-                            onUpdateProfile={updateProfile}
-                            showCaptainHub={true}
-                            onOpenCaptainHub={() => setActiveTab('captain_hub')}
-                        />
-                    )}
-                    {activeTab === 'career' && profile.role === 'Scorer' && (
-                        <ScorerProfile
-                            profile={profile}
-                            onUpdateProfile={updateProfile}
-                            fixtures={allFixtures}
-                        />
-                    )}
                     {activeTab === 'setup' && (<MatchSetup teams={allTeams} existingFixture={pendingSetupFixture} onMatchReady={handleSetupComplete} onCancel={() => { setPendingSetupFixture(null); setActiveTab('home'); }} onCreateTeam={handleQuickCreateTeam} />)}
                     {activeTab === 'scorer' && (activeMatch ? (
                         <Scorer
@@ -1633,7 +1933,7 @@ const App: React.FC = () => {
                                 team={myTeam}
                                 fixtures={allFixtures.filter(f => f != null)} // Filter out null/undefined fixtures
                                 allPlayers={allPlayers}
-                                onBack={() => setActiveTab('home')}
+                                onBack={() => handleSwitchTab('media')}
                                 onSubmitReport={handleSubmitMatchReport}
                                 onLodgeProtest={(issue) => setIssues([...issues, issue])}
                                 currentUser={profile}
@@ -1753,17 +2053,6 @@ const App: React.FC = () => {
                         />
                     )}
 
-                    {activeTab === 'umpire_hub' && (
-                        <UmpireProfile
-                            profile={profile}
-                            fixtures={allFixtures}
-                            organizations={orgs}
-                            allTeams={allTeams}
-                            onBack={() => setActiveTab('home')}
-                            onCreateFixture={() => setActiveTab('setup')}
-                            onSubmitReport={handleSubmitUmpireReport}
-                        />
-                    )}
                 </div>
             </Layout>
 
