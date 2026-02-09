@@ -40,22 +40,29 @@ const mapTeam = (t: any, allPlayers: any[]) => ({
   }))
 });
 
-const mapFixture = (f: any) => ({
-  id: f.id,
-  tournamentId: f.tournament_id,
-  teamAId: f.team_a_id,
-  teamBId: f.team_b_id,
-  date: f.date,
-  venue: f.venue,
-  status: f.status,
-  result: f.result,
-  winnerId: f.winner_id,
-  isArchived: f.is_archived,
-  teamAScore: f.scores?.teamAScore,
-  teamBScore: f.scores?.teamBScore,
-  savedState: f.saved_state,
-  ...(f.details || {})
-});
+const mapFixture = (f: any, allTeams: any[] = []) => {
+  const teamA = allTeams.find(t => t.id === f.team_a_id);
+  const teamB = allTeams.find(t => t.id === f.team_b_id);
+
+  return {
+    id: f.id,
+    tournamentId: f.tournament_id,
+    teamAId: f.team_a_id,
+    teamBId: f.team_b_id,
+    teamAName: teamA?.name || 'Unknown Team',
+    teamBName: teamB?.name || 'Unknown Team',
+    date: f.date,
+    venue: f.venue,
+    status: f.status,
+    result: f.result,
+    winnerId: f.winner_id,
+    isArchived: f.is_archived,
+    teamAScore: f.scores?.teamAScore,
+    teamBScore: f.scores?.teamBScore,
+    savedState: f.saved_state,
+    ...(f.details || {})
+  };
+};
 
 export const pushGlobalSync = async (data: {
   orgs: Organization[],
@@ -472,7 +479,7 @@ export const fetchGlobalSync = async (userId?: string): Promise<{
       const orgTeams = orgTeamsRaw.map((t: any) => mapTeam(t, players.data || []));
 
       const orgTournamentIds = orgTournaments.map((t: any) => t.id);
-      const orgFixtures = fixtures.data?.filter((f: any) => orgTournamentIds.includes(f.tournament_id)).map(mapFixture) || [];
+      const orgFixtures = fixtures.data?.filter((f: any) => orgTournamentIds.includes(f.tournament_id)).map(f => mapFixture(f, teams.data || [])) || [];
 
       const mappedTournaments = orgTournaments.map((t: any) => {
         const tournamentTeamIds = tournamentTeamLinks.data
@@ -634,7 +641,7 @@ export const fetchGlobalSync = async (userId?: string): Promise<{
     return {
       orgs: mappedOrgs,
       allTeams: allTeamsMapped,
-      standaloneMatches: fixtures.data?.filter((f: any) => !f.tournament_id).map(mapFixture) || [],
+      standaloneMatches: fixtures.data?.filter((f: any) => !f.tournament_id).map(f => mapFixture(f, teams.data || [])) || [],
       mediaPosts: mappedMedia as MediaPost[],
       issues: mappedIssues,
       matchReports: mappedMatchReports,
