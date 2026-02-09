@@ -691,7 +691,7 @@ export const deleteTeam = async (teamId: string): Promise<boolean> => {
 
 export const deleteTournament = async (tournamentId: string): Promise<boolean> => {
   await supabase.from('tournament_teams').delete().match({ tournament_id: tournamentId });
-  await supabase.from('match_fixtures').delete().match({ tournament_id: tournamentId });
+  await supabase.from('fixtures').delete().match({ tournament_id: tournamentId });
   const { error } = await supabase.from('tournaments').delete().match({ id: tournamentId });
 
   if (error) {

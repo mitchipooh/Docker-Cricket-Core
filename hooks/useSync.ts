@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Organization, Team, MatchFixture, MediaPost, UserProfile, GameIssue, MatchReportSubmission, UmpireMatchReport } from '../types';
 import { fetchGlobalSync, pushGlobalSync, pushUserData, fetchUserData } from '../services/centralZoneService';
+import { supabase } from '../lib/supabase';
 
 interface UseSyncProps {
     profile: UserProfile | null;
@@ -146,8 +147,28 @@ export const useSync = ({
     // Initial Pull & Heartbeat
     useEffect(() => {
         performPull();
-        const interval = setInterval(performPull, 30000);
-        return () => clearInterval(interval);
+        const interval = setInterval(performPull, 30000); // 30s heartbeat fallback
+
+        // --- NEW: REAL-TIME SYNC ---
+        const subscription = supabase
+            .channel('fixtures-realtime')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'fixtures' },
+                (payload) => {
+                    console.log('⚡ Realtime Update Received:', payload.eventType);
+                    // Trigger an immediate pull to get the full merged state
+                    performPull();
+                }
+            )
+            .subscribe((status) => {
+                console.log('📡 Realtime Subscription Status:', status);
+            });
+
+        return () => {
+            clearInterval(interval);
+            supabase.removeChannel(subscription);
+        };
     }, [performPull]);
 
     // Network Status Recovery
