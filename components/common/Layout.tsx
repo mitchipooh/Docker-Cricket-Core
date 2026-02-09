@@ -114,7 +114,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const isAppMode = ['scorer', 'setup', 'media'].includes(activeTab);
   const mainClasses = isAppMode
     ? "h-[100dvh] w-full pt-16 lg:pt-20 overflow-x-hidden overflow-y-hidden flex flex-col relative"
-    : "h-[100dvh] w-full pt-20 lg:pt-24 pb-12 px-4 md:px-8 lg:px-12 overflow-x-hidden overflow-y-auto scroll-container custom-scrollbar relative flex flex-col";
+    : "h-[100dvh] w-full pt-20 lg:pt-24 pb-12 px-2 md:px-8 lg:px-12 overflow-x-hidden overflow-y-auto scroll-container custom-scrollbar no-scrollbar relative flex flex-col";
 
   return (
     <div className={`h-[100dvh] w-full ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} relative transition-colors duration-300 flex flex-col overflow-hidden`}>

@@ -188,11 +188,26 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {fixtures
                   .filter(f => f.status === 'Live' || f.status === 'Scheduled')
-                  .sort((a, b) => a.status === 'Live' ? -1 : 1)
-                  .slice(0, 4)
+                  .sort((a, b) => {
+                    // 1. Status Priority (Live > Scheduled)
+                    if (a.status === 'Live' && b.status !== 'Live') return -1;
+                    if (a.status !== 'Live' && b.status === 'Live') return 1;
+
+                    // 2. User Affiliation Priority
+                    const aIsMyOrg = organizations.some(o => o.fixtures.some(fx => fx.id === a.id) && o.members.some(m => m.userId === currentUserId));
+                    const bIsMyOrg = organizations.some(o => o.fixtures.some(fx => fx.id === b.id) && o.members.some(m => m.userId === currentUserId));
+                    if (aIsMyOrg && !bIsMyOrg) return -1;
+                    if (!aIsMyOrg && bIsMyOrg) return 1;
+
+                    // 3. Date Priority (Soonest first)
+                    return new Date(a.date).getTime() - new Date(b.date).getTime();
+                  })
+                  .slice(0, 10)
                   .map(f => {
                     const isClaimable = canClaimMatch(f);
                     const isAdmin = profile.role === 'Administrator';
+                    const isMyOrg = organizations.some(o => o.fixtures.some(fx => fx.id === f.id) && o.members.some(m => m.userId === currentUserId));
+                    const hostOrg = organizations.find(o => o.fixtures.some(fx => fx.id === f.id));
                     return (
                       <div
                         key={f.id}
@@ -209,6 +224,11 @@ export const GlobalDashboard: React.FC<GlobalDashboardProps> = ({
                               <span className={`text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${f.status === 'Live' ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
                                 {f.status === 'Live' ? 'Live' : 'Upcoming'}
                               </span>
+                              {!isMyOrg && hostOrg && (
+                                <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-600 border border-indigo-200">
+                                  Global: {hostOrg.name}
+                                </span>
+                              )}
                             </div>
                             <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{f.venue} • {new Date(f.date).toLocaleDateString()}</div>
                           </div>

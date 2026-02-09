@@ -236,7 +236,7 @@ export const AdminCenter: React.FC<AdminProps> = ({
   const hasPermission = (perm: string) => userRole === 'Administrator' || !!currentMember?.permissions?.[perm];
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 min-h-screen">
+    <div className="max-w-7xl mx-auto px-1.5 py-4 md:p-8 min-h-screen">
       <CreateOrgModal
         isOpen={modals.createOrg}
         onClose={() => setModals({ ...modals, createOrg: false })}
@@ -467,7 +467,7 @@ export const AdminCenter: React.FC<AdminProps> = ({
 
       {viewScope === 'GLOBAL' && (
         <GlobalDashboard
-          organizations={accessibleOrgs}
+          organizations={organizations}
           onSelectOrg={(id) => { setSelectedOrgId(id); setViewScope('ORG_LEVEL'); }}
           onRequestDeleteOrg={(org) => { setPendingOrg(org); setModals({ ...modals, deleteOrg: true }); }}
           onRequestCreateOrg={handleRequestCreateOrg}
