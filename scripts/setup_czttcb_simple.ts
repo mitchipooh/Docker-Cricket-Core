@@ -184,6 +184,19 @@ async function setupCZTTCB() {
     }
     console.log('✅ Teams inserted');
 
+    // Step 2.5: Create organization-team links
+    const orgTeamLinks = teams.map(team => ({
+        organization_id: orgId,
+        team_id: team.id
+    }));
+
+    const { error: linksError } = await supabase.from('organization_teams').upsert(orgTeamLinks);
+    if (linksError) {
+        console.error('❌ Org-team links failed:', linksError);
+        return;
+    }
+    console.log('✅ Organization-team links created');
+
     // Step 3: Insert players
     const { error: playersError } = await supabase.from('roster_players').upsert(allPlayers);
     if (playersError) {

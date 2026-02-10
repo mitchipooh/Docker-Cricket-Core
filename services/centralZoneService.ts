@@ -783,10 +783,11 @@ export const fetchUserData = async (userId: string): Promise<UserDataPayload | n
 
   if (!data || error) {
     const handleToTry = userId.startsWith('@') ? userId : `@${userId}`;
+    // Use ilike for case-insensitive handle matching
     const { data: handleData, error: handleErr } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('handle', handleToTry)
+      .ilike('handle', handleToTry)
       .single();
 
     if (handleData && !handleErr) {
