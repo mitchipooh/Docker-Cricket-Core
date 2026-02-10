@@ -84,7 +84,7 @@ export const CaptainsProfile: React.FC<CaptainsProfileProps> = ({
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
                 <div>
                     <button onClick={onBack} className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em] mb-4 hover:text-indigo-500 transition-colors">
-                        ← Registry Home
+                        ← Back
                     </button>
                     <div className="flex items-center gap-6">
                         <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-2xl">
@@ -98,7 +98,7 @@ export const CaptainsProfile: React.FC<CaptainsProfileProps> = ({
                                     onClick={onBack}
                                     className="ml-4 text-[9px] bg-slate-100 hover:bg-slate-200 text-slate-500 py-1 px-3 rounded-full transition-all"
                                 >
-                                    Back to Dashboard
+                                    Back
                                 </button>
                             </p>
                         </div>

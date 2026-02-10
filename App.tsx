@@ -25,6 +25,7 @@ import { Scorer } from './components/scoring/Scorer.tsx';
 import { CaptainsProfile } from './components/captains/CaptainsProfile.tsx';
 import { PlayerRegistry } from './components/search/PlayerRegistry.tsx'; // Import Registry
 import { TeamRegistry } from './components/search/TeamRegistry.tsx'; // Import Team Registry
+import { TeamSelector } from './components/captains/TeamSelector.tsx'; // Import Team Selector
 import { UmpireProfile } from './components/umpire/UmpireProfile.tsx'; // Import Umpire Profile
 import { ReportVerification } from './components/admin/ReportVerification.tsx';
 import { TransferMarket } from './components/search/TransferMarket.tsx'; // [NEW] Transfer Market
@@ -319,6 +320,28 @@ const App: React.FC = () => {
         }
         return null;
     }, [profile, allTeams, orgs, selectedHubTeamId]);
+
+    const myCaptainTeams = useMemo(() => {
+        if (!orgs || !allTeams || !profile) return [];
+        const teams: Team[] = [];
+
+        // 1. Teams where user is a player/member
+        const memberTeams = allTeams.filter(t => t.players.some(p => p.id === profile.id || p.userId === profile.id));
+        teams.push(...memberTeams);
+
+        // 2. Teams managed via Org membership (e.g. Org Admin managing a team)
+        for (const org of orgs) {
+            const member = org.members.find(m => m.userId === profile.id);
+            if (member?.managedTeamId) {
+                const team = allTeams.find(t => t.id === member.managedTeamId);
+                if (team) teams.push(team);
+            }
+        }
+
+        // Deduplicate
+        const uniqueTeams = Array.from(new Map(teams.map(t => [t.id, t])).values());
+        return uniqueTeams;
+    }, [profile, allTeams, orgs]);
 
     const viewMatch = useMemo(() => {
         return allFixtures.find(f => f.id === viewMatchId);
@@ -1928,12 +1951,30 @@ const App: React.FC = () => {
                     ))}
 
                     {activeTab === 'captain_hub' && (
-                        myTeam ? (
+                        selectedHubTeamId ? (
                             <CaptainsProfile
-                                team={myTeam}
-                                fixtures={allFixtures.filter(f => f != null)} // Filter out null/undefined fixtures
+                                team={allTeams.find(t => t.id === selectedHubTeamId)!}
+                                fixtures={allFixtures.filter(f => f != null)}
                                 allPlayers={allPlayers}
-                                onBack={() => handleSwitchTab('media')}
+                                onBack={() => { setSelectedHubTeamId(null); /* Return to selector if multiple teams */ }}
+                                onSubmitReport={handleSubmitMatchReport}
+                                onLodgeProtest={(issue) => setIssues([...issues, issue])}
+                                currentUser={profile}
+                                issues={issues}
+                                onUpdateFixtureSquad={handleUpdateFixtureSquad}
+                            />
+                        ) : myCaptainTeams.length > 1 ? (
+                            <TeamSelector
+                                teams={myCaptainTeams}
+                                onSelect={(id) => setSelectedHubTeamId(id)}
+                                onBack={() => setActiveTab('home')}
+                            />
+                        ) : myCaptainTeams.length === 1 ? (
+                            <CaptainsProfile
+                                team={myCaptainTeams[0]}
+                                fixtures={allFixtures.filter(f => f != null)}
+                                allPlayers={allPlayers}
+                                onBack={() => setActiveTab('media')}
                                 onSubmitReport={handleSubmitMatchReport}
                                 onLodgeProtest={(issue) => setIssues([...issues, issue])}
                                 currentUser={profile}
