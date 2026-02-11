@@ -90,7 +90,8 @@ export const MediaCenter: React.FC<MediaCenterProps> = ({
             });
         }
 
-        return filtered.filter(f => {
+        // Apply status/type filters
+        filtered = filtered.filter(f => {
             if (activeFixtureFilter === 'ARCHIVE') return f.isArchived;
             if (f.isArchived) return false;
 
@@ -105,7 +106,21 @@ export const MediaCenter: React.FC<MediaCenterProps> = ({
             return false;
         });
 
-    }, [fixtures, activeFixtureFilter, viewingOrgId, organizations, currentProfile]);
+        // Apply search query filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(f => {
+                const teamAMatch = f.teamAName?.toLowerCase().includes(query);
+                const teamBMatch = f.teamBName?.toLowerCase().includes(query);
+                const venueMatch = f.venue?.toLowerCase().includes(query);
+                const dateMatch = new Date(f.date).toLocaleDateString().toLowerCase().includes(query);
+                return teamAMatch || teamBMatch || venueMatch || dateMatch;
+            });
+        }
+
+        return filtered;
+
+    }, [fixtures, activeFixtureFilter, viewingOrgId, organizations, currentProfile, searchQuery]);
 
     // Also filter MediaPosts if looking at specific Org
     const displayedPosts = useMemo(() => {
@@ -262,6 +277,26 @@ export const MediaCenter: React.FC<MediaCenterProps> = ({
 
                 {activeTab === 'FIXTURES' && (
                     <div className="space-y-6 animate-in fade-in pb-10">
+                        {/* Search Input */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search matches by team, venue, or date..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full px-6 py-4 pl-12 rounded-2xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm font-bold placeholder:text-slate-400"
+                            />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">🔍</span>
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-sm"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+
                         <div className="flex gap-2 border-b border-slate-200 pb-4 overflow-x-auto no-scrollbar">
                             {(['LIVE', 'SCHEDULED', 'COMPLETED', 'UNOFFICIAL', 'ARCHIVE'] as const).map(filter => (
                                 <button key={filter} onClick={() => setActiveFixtureFilter(filter)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeFixtureFilter === filter ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-400'}`}>{filter}</button>

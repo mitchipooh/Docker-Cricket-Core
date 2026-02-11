@@ -47,6 +47,7 @@ import { LoginModal } from './components/auth/LoginModal';
 import { TournamentView } from './components/dashboard/TournamentView'; // Import
 import { updatePlayerStatsFromReport } from './utils/cricket-engine.ts';
 import { EmbedViewer } from './components/display/EmbedViewer.tsx';
+import { MatchSummary } from './components/display/MatchSummary.tsx';
 import { supabase } from './lib/supabase';
 import { DEFAULT_POINTS_CONFIG, PRESET_TEST } from './competition/pointsEngine';
 import { generateId } from './utils/idGenerator';
@@ -121,6 +122,9 @@ const App: React.FC = () => {
     const [conflictMatches, setConflictMatches] = useState<MatchFixture[]>([]);
     const [showConflictModal, setShowConflictModal] = useState(false);
 
+    // Shared Link Match Summary
+    const [summaryMatch, setSummaryMatch] = useState<MatchFixture | null>(null);
+
     // Global User Directory (Client-side simulation)
     const [globalUsers, setGlobalUsers] = useState<UserProfile[]>([]);
 
@@ -160,6 +164,38 @@ const App: React.FC = () => {
         }, 2500);
         return () => clearTimeout(timer);
     }, []);
+
+    // --- PREVENT ACCIDENTAL APP CLOSURE ---
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            // Only warn if there's an active match being scored
+            if (activeMatch && activeMatch.status === 'Live' && activeMatch.scorerId === profile.id) {
+                e.preventDefault();
+                e.returnValue = 'You have an active match in progress. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [activeMatch, profile.id]);
+
+    // --- HANDLE VISIBILITY CHANGES ---
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                console.log('App hidden - pausing background activity');
+                // App is hidden, could pause non-critical sync
+            } else {
+                console.log('App visible - resuming activity');
+                // App is visible again, resume sync
+                pullNow();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [pullNow]);
 
     // --- DATA LOADING EFFECT ---
     useEffect(() => {
@@ -411,7 +447,12 @@ const App: React.FC = () => {
                 if (urlMatch && urlMatch.status === 'Live' && urlMatch.scorerId === profile.id) {
                     setActiveMatch(urlMatch);
                     setActiveTab('scorer');
+                    setActiveTab('scorer');
                     return; // Early exit
+                } else if (urlMatch) {
+                    // Priority 1.5: Match ID in URL + You are NOT the scorer -> Show Summary
+                    // Delay slightly to ensure data is loaded
+                    setTimeout(() => setSummaryMatch(urlMatch), 500);
                 }
             }
 
@@ -1550,12 +1591,40 @@ const App: React.FC = () => {
 
                             {/* Filter standalone matches or matches where user is player/captain */}
                             {(() => {
+                                // Debug: Log all available matches
+                                console.log('MY_MATCHES_DEBUG: Total standalone matches:', standaloneMatches.length);
+                                console.log('MY_MATCHES_DEBUG: Total org fixtures:', orgs.flatMap(o => o.fixtures).length);
+                                console.log('MY_MATCHES_DEBUG: User profile ID:', profile.id);
+
                                 const myMatches = [...standaloneMatches, ...orgs.flatMap(o => o.fixtures)].filter(f => {
                                     // Check if user is in Playing XI (need player IDs on fixture, or check teams)
                                     // For simplicity, checking if user's team is involved
                                     const myTeamIds = allTeams.filter(t => t.players.some(p => p.id === profile.id)).map(t => t.id);
-                                    return myTeamIds.includes(f.teamAId) || myTeamIds.includes(f.teamBId) || f.scorerId === profile.id || f.umpires?.includes(profile.id);
+
+                                    // Include match if:
+                                    // 1. User is a player on either team
+                                    // 2. User is the scorer
+                                    // 3. User is an umpire
+                                    // 4. It's a standalone match created by this user (scorerId matches)
+                                    const isPlayerMatch = myTeamIds.includes(f.teamAId) || myTeamIds.includes(f.teamBId);
+                                    const isScorer = f.scorerId === profile.id;
+                                    const isUmpire = f.umpires?.includes(profile.id);
+                                    const isStandaloneCreator = !f.tournamentId && f.scorerId === profile.id;
+
+                                    const shouldInclude = isPlayerMatch || isScorer || isUmpire || isStandaloneCreator;
+
+                                    if (shouldInclude) {
+                                        console.log('MY_MATCHES_DEBUG: Including match:', {
+                                            id: f.id,
+                                            teams: `${f.teamAName} vs ${f.teamBName}`,
+                                            reason: isPlayerMatch ? 'player' : isScorer ? 'scorer' : isUmpire ? 'umpire' : 'standalone creator'
+                                        });
+                                    }
+
+                                    return shouldInclude;
                                 }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                                console.log('MY_MATCHES_DEBUG: Filtered matches count:', myMatches.length);
 
                                 if (myMatches.length === 0) {
                                     return (
@@ -2229,6 +2298,24 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+
+            {/* Shared Link Summary Modal */}
+            {summaryMatch && (
+                <MatchSummary
+                    match={summaryMatch}
+                    onClose={() => setSummaryMatch(null)}
+                    onPin={() => {
+                        // Pin to active match if live
+                        if (summaryMatch.status === 'Live') {
+                            setViewMatchId(summaryMatch.id);
+                            setActiveTab('media');
+                        }
+                        setSummaryMatch(null);
+                    }}
+                    allTeams={allTeams}
+                />
             )}
 
             {/* Auth Modal */}

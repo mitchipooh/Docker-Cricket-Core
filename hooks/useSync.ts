@@ -51,13 +51,28 @@ export const useSync = ({
     const isSyncingRef = useRef(false);
     const dirtyRef = useRef(false);
 
+    // Track last pull timestamp
+    const lastPullRef = useRef<number>(0);
+    const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
     // 1. PULL: Fetch on mount and occasionally
-    const performPull = useCallback(async () => {
+    const performPull = useCallback(async (force: boolean = false) => {
         if (isSyncingRef.current) return;
+
+        // Skip pull if local changes are pending
         if (dirtyRef.current) {
             console.log('⏳ Skipping Pull: Local changes pending push.');
             return;
         }
+
+        // Skip pull if data is fresh (unless forced)
+        const now = Date.now();
+        const timeSinceLastPull = now - lastPullRef.current;
+        if (!force && timeSinceLastPull < STALE_THRESHOLD_MS && lastPullRef.current > 0) {
+            console.log(`⏭️ Skipping Pull: Data is fresh (${Math.round(timeSinceLastPull / 1000)}s old)`);
+            return;
+        }
+
         isSyncingRef.current = true;
         setIsSyncing(true);
 
@@ -75,7 +90,7 @@ export const useSync = ({
             } : 'null');
 
             if (cloudData) {
-                // Simple merge strategy: Server wins if we are not dirty. 
+                // PRIORITY: Local wins - only update if cloud has different data
                 const orgsChanged = JSON.stringify(cloudData.orgs) !== JSON.stringify(orgs);
                 const matchesChanged = JSON.stringify(cloudData.standaloneMatches) !== JSON.stringify(standaloneMatches);
                 const postsChanged = JSON.stringify(cloudData.mediaPosts) !== JSON.stringify(mediaPosts);
@@ -86,6 +101,7 @@ export const useSync = ({
 
                 console.log('🔄 Applying changes:', { orgsChanged, matchesChanged, postsChanged, allTeamsChanged, issuesChanged, matchReportsChanged, umpireReportsChanged });
 
+                // Only apply cloud changes if they differ from local
                 if (orgsChanged) setOrgsState(cloudData.orgs || []);
                 if (matchesChanged) setMatchesState(cloudData.standaloneMatches || []);
                 if (postsChanged) setPostsState(cloudData.mediaPosts || []);
@@ -104,6 +120,8 @@ export const useSync = ({
                     if (userData.following) setFollowing(userData.following);
                 }
             }
+
+            lastPullRef.current = Date.now();
         } catch (e) {
             console.error("Sync fetch failed:", e);
         } finally {
@@ -111,7 +129,7 @@ export const useSync = ({
             setIsSyncing(false);
             dirtyRef.current = false; // Reset dirty after a successful sync/merge cycle
         }
-    }, [profile?.id, profile?.role]); // Dependencies for Pull
+    }, [profile?.id, profile?.role, orgs, standaloneMatches, mediaPosts, allTeams, issues, matchReports, umpireReports]); // Dependencies for Pull
 
     // 2. PUSH: Function to call when we make changes
     const performPush = useCallback(async () => {
