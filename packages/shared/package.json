@@ -13,10 +13,20 @@
         "./scoring/*": "./scoring/*.ts",
         "./scoring/hooks/*": "./scoring/hooks/*.ts",
         "./scoring/engines/*": "./scoring/engines/*.ts",
+        "./competition/*": "./competition/*.ts",
+        "./lib/*": "./lib/*.ts",
         "./cricket-engine": "./utils/cricket-engine.ts",
         "./commentaryGenerator": "./utils/commentaryGenerator.ts",
         "./newsGenerator": "./utils/newsGenerator.ts",
         "./pointsCalculator": "./utils/pointsCalculator.ts",
         "./idGenerator": "./utils/idGenerator.ts"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "*",
+        "react": "*",
+        "react-dom": "*",
+        "lucide-react": "*",
+        "clsx": "*",
+        "tailwind-merge": "*"
     }
 }

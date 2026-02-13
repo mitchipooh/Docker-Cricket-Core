@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { ScorerLayoutProps } from './types';
 import { ScoringPad } from '../ScoringPad';
-import { FullMatchScorecard } from '../../display/FullMatchScorecard.tsx';
-import { MatchResultSummary } from '../../display/MatchResultSummary.tsx';
+import { FullMatchScorecard } from '../../display/FullMatchScorecard';
+import { MatchResultSummary } from '../../display/MatchResultSummary';
 import { MatchState, BallEvent } from '../@cricket/shared';
-import { ShotMapPanel } from '../../analytics/ShotMapPanel.tsx';
-import { AdvancedAnalysis } from '../../analytics/AdvancedAnalysis.tsx';
-import { getBallColor } from '../@cricket/shared/cricket-engine.ts';
+import { ShotMapPanel } from '../../analytics/ShotMapPanel';
+import { AdvancedAnalysis } from '../../analytics/AdvancedAnalysis';
+import { getBallColor } from '../@cricket/shared';
 
 export const MobileScorerLayout = ({
     match, engine, teams, battingTeam, bowlingTeam,

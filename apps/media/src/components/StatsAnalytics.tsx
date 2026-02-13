@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Team } from '@cricket/shared';
-import { calculateDLSTarget } from '@cricket/shared/cricket-engine.ts';
-import { PitchView } from './PitchView.tsx';
-import { FieldView } from './FieldView.tsx';
+import { calculateDLSTarget } from '@cricket/shared';
+import { PitchView } from './PitchView';
+import { FieldView } from './FieldView';
 
 interface StatsProps {
   teams: Team[];

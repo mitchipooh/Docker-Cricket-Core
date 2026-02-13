@@ -1,5 +1,5 @@
 
-import { Team, Player, MatchFixture, MatchState, BallEvent, Standing, PointsConfig, Organization, MatchReportSubmission } from '../types';
+import { Team, Player, MatchFixture, MatchState, BallEvent, Standing, PointsConfig, Organization, MatchReportSubmission } from '@cricket/shared';
 
 /**
  * Generates a Round Robin schedule for a list of teams.
@@ -103,7 +103,7 @@ export const generateKnockouts = (qualifiedTeams: Standing[], tournamentId: stri
 };
 
 import { calculatePointsForSide } from './pointsCalculator';
-import { DEFAULT_POINTS_CONFIG } from '../competition/pointsEngine';
+import { DEFAULT_POINTS_CONFIG } from '@cricket/shared/competition/pointsEngine';
 
 /**
  * Calculate Standings for a group based on fixtures

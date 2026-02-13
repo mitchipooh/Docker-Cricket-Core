@@ -1,6 +1,6 @@
 
-import { MatchResult } from './types.ts';
-import { PointsConfig } from '../types.ts';
+import { MatchResult } from './types';
+import { PointsConfig } from '@cricket/shared';
 
 export const PRESET_TEST: PointsConfig = {
   win: 16, // Match Win

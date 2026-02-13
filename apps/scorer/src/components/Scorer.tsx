@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { MatchFixture, Team, Organization, UserProfile, MediaPost, MatchState, BallEvent } from '@cricket/shared';
-import { getBallColor } from '@cricket/shared/cricket-engine';
-import { generateCommentary, generateEndOfOverCommentary } from '@cricket/shared/commentaryGenerator';
-import { generateMatchNews } from '@cricket/shared/newsGenerator';
+import { getBallColor } from '@cricket/shared';
+import { generateCommentary, generateEndOfOverCommentary } from '@cricket/shared';
+import { generateMatchNews } from '@cricket/shared';
 import { useMatchEngine } from '@cricket/shared/scoring/hooks/useMatchEngine';
 import { useScoringPad } from '@cricket/shared/scoring/hooks/useScoringPad';
 import { useMatchRules } from '@cricket/shared/scoring/hooks/useMatchRules';
@@ -12,27 +12,27 @@ import { useWicketFlow } from '@cricket/shared/scoring/hooks/useWicketFlow';
 import { useInningsOverRateTimer } from '@cricket/shared/scoring/hooks/useInningsOverRateTimer';
 
 // Views
-import { MobileScorerLayout } from './scorer-views/MobileScorerLayout.tsx';
-import { MatchResultSummary } from '../display/MatchResultSummary.tsx';
-import { FullMatchScorecard } from '../display/FullMatchScorecard.tsx';
-import { BroadcasterView } from '../media/BroadcasterView.tsx';
+import { MobileScorerLayout } from './scorer-views/MobileScorerLayout';
+import { MatchResultSummary } from '../display/MatchResultSummary';
+import { FullMatchScorecard } from '../display/FullMatchScorecard';
+import { BroadcasterView } from '../media/BroadcasterView';
 
 // Modals
-import { ShotEntryModal } from '../analytics/ShotEntryModal.tsx';
-import { WicketModal } from '../modals/WicketModal.tsx';
-import { EndOfOverModal } from '../modals/EndOfOverModal.tsx';
-import { InningsBreakModal } from '../modals/InningsBreakModal.tsx';
-import { MatchStartModal } from '../modals/MatchStartModal.tsx';
-import { NewBatterModal } from '../modals/NewBatterModal.tsx';
-import { PlayerEditModal } from '../modals/PlayerEditModal.tsx';
-import { BallCorrectionModal } from '../modals/BallCorrectionModal.tsx';
-import { CameraModal } from '../modals/CameraModal.tsx';
-import { OfficialsModal } from '../modals/OfficialsModal.tsx';
-import { checkEndOfInnings } from '@cricket/shared/scoring/engines/inningsEngine.ts';
-import { generateMatchPDF } from './logic/generateMatchPDF.ts';
-import { useAudioCommentary } from '@cricket/shared/hooks/useAudioCommentary.ts';
-import { AudioCommentaryToggle } from './AudioCommentaryToggle.tsx';
-import { AudioSettingsModal } from './AudioSettingsModal.tsx';
+import { ShotEntryModal } from '../analytics/ShotEntryModal';
+import { WicketModal } from '../modals/WicketModal';
+import { EndOfOverModal } from '../modals/EndOfOverModal';
+import { InningsBreakModal } from '../modals/InningsBreakModal';
+import { MatchStartModal } from '../modals/MatchStartModal';
+import { NewBatterModal } from '../modals/NewBatterModal';
+import { PlayerEditModal } from '../modals/PlayerEditModal';
+import { BallCorrectionModal } from '../modals/BallCorrectionModal';
+import { CameraModal } from '../modals/CameraModal';
+import { OfficialsModal } from '../modals/OfficialsModal';
+import { checkEndOfInnings } from '@cricket/shared/scoring/engines/inningsEngine';
+import { generateMatchPDF } from './logic/generateMatchPDF';
+import { useAudioCommentary } from '@cricket/shared/hooks/useAudioCommentary';
+import { AudioCommentaryToggle } from './AudioCommentaryToggle';
+import { AudioSettingsModal } from './AudioSettingsModal';
 interface ScorerProps {
     match: MatchFixture;
     teams: Team[];

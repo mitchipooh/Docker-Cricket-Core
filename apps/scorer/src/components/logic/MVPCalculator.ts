@@ -1,5 +1,5 @@
 import { MatchState, Player, BallEvent } from '../@cricket/shared';
-import { getBattingStats, getBowlingStats } from '../@cricket/shared/scoring/MatchSelectors.ts';
+import { getBattingStats, getBowlingStats } from '../@cricket/shared/scoring/MatchSelectors';
 
 export interface PlayerPerformance {
     playerId: string;

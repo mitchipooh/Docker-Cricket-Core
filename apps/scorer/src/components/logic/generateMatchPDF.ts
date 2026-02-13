@@ -1,6 +1,6 @@
-import { MatchState, Team } from '../@cricket/shared.ts';
-import { buildBattingCard } from '../../../scorer/scorecard/buildBattingCard.ts';
-import { buildBowlingCard } from '../../../scorer/scorecard/buildBowlingCard.ts';
+import { MatchState, Team } from '../@cricket/shared';
+import { buildBattingCard } from '../../../scorer/scorecard/buildBattingCard';
+import { buildBowlingCard } from '../../../scorer/scorecard/buildBowlingCard';
 
 export const generateMatchPDF = (matchState: MatchState, teamA: Team, teamB: Team, format: string) => {
     const printWindow = window.open('', '', 'width=800,height=600');

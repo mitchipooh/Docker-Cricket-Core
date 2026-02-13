@@ -5,19 +5,19 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Organization, MatchFixture, UserProfile, Team, Player, Tournament, TournamentFormat, PlayerWithContext, Group, MediaPost, OrgMember, GameIssue } from '@cricket/shared.ts';
-import { generateRoundRobin } from '@cricket/shared/cricket-engine.ts';
-import { GlobalDashboard } from '../dashboard/GlobalDashboard.tsx';
-import { OrganizationView } from '../dashboard/OrganizationView.tsx';
-import { DEFAULT_POINTS_CONFIG, PRESET_TEST } from '../../competition/pointsEngine.ts';
-import { TournamentDashboard } from '../dashboard/TournamentDashboard.tsx';
-import { DeleteOrgModal } from '../modals/DeleteOrgModal.tsx';
-import { HRPortal } from './HRPortal.tsx';
-import { TransferMarket } from '../market/TransferMarket.tsx';
-import { SponsorManager } from './SponsorManager.tsx';
-import { CreateOrgModal } from '../modals/CreateOrgModal.tsx';
-import { IssueResolutionModal } from '../modals/IssueResolutionModal.tsx';
-import { EmbedCodeModal } from '../modals/EmbedCodeModal.tsx';
+import { Organization, MatchFixture, UserProfile, Team, Player, Tournament, TournamentFormat, PlayerWithContext, Group, MediaPost, OrgMember, GameIssue } from '@cricket/shared';
+import { generateRoundRobin } from '@cricket/shared';
+import { GlobalDashboard } from '../dashboard/GlobalDashboard';
+import { OrganizationView } from '../dashboard/OrganizationView';
+import { DEFAULT_POINTS_CONFIG, PRESET_TEST } from '@cricket/shared/competition/pointsEngine';
+import { TournamentDashboard } from '../dashboard/TournamentDashboard';
+import { DeleteOrgModal } from '../modals/DeleteOrgModal';
+import { HRPortal } from './HRPortal';
+import { TransferMarket } from '../market/TransferMarket';
+import { SponsorManager } from './SponsorManager';
+import { CreateOrgModal } from '../modals/CreateOrgModal';
+import { IssueResolutionModal } from '../modals/IssueResolutionModal';
+import { EmbedCodeModal } from '../modals/EmbedCodeModal';
 
 interface AdminProps {
   organizations: Organization[];

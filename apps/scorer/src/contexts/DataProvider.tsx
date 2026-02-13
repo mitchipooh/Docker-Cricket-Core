@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Organization, MatchFixture, MediaPost, UserProfile, Team, GameIssue, MatchReportSubmission, UmpireMatchReport } from '@cricket/shared/types';
+import { Organization, MatchFixture, MediaPost, UserProfile, Team, GameIssue, MatchReportSubmission, UmpireMatchReport } from '@cricket/shared';
 import { useSync } from '@cricket/shared/hooks/useSync';
 
 interface DataContextType {

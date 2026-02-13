@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Coordinates } from '@cricket/shared.ts';
-import { FieldView } from './FieldView.tsx';
-import { PitchView } from './PitchView.tsx';
-import { getBallColor } from '@cricket/shared/cricket-engine.ts';
+import { Coordinates } from '@cricket/shared';
+import { FieldView } from './FieldView';
+import { PitchView } from './PitchView';
+import { getBallColor } from '@cricket/shared';
 
 interface ShotEntryModalProps {
   isOpen: boolean;
