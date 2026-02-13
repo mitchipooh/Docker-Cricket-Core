@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { MatchFixture, MediaPost, Comment, Team, InningsStats, Organization, UserProfile } from '../../types.ts';
+import { MatchFixture, MediaPost, Comment, Team, InningsStats, Organization, UserProfile } from '@cricket/shared.ts';
 import { FullMatchScorecard } from '../display/FullMatchScorecard.tsx';
 import { CameraModal } from '../modals/CameraModal.tsx';
 import { buildBattingCard } from '../../scorer/scorecard/buildBattingCard.ts';

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MediaPost, UserProfile } from '../../types.ts';
+import { MediaPost, UserProfile } from '@cricket/shared.ts';
 
 interface NewsFeedProps {
     posts: MediaPost[];

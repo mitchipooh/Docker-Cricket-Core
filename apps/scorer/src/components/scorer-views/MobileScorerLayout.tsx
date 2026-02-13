@@ -3,10 +3,10 @@ import { ScorerLayoutProps } from './types';
 import { ScoringPad } from '../ScoringPad';
 import { FullMatchScorecard } from '../../display/FullMatchScorecard.tsx';
 import { MatchResultSummary } from '../../display/MatchResultSummary.tsx';
-import { MatchState, BallEvent } from '../../../types';
+import { MatchState, BallEvent } from '../@cricket/shared';
 import { ShotMapPanel } from '../../analytics/ShotMapPanel.tsx';
 import { AdvancedAnalysis } from '../../analytics/AdvancedAnalysis.tsx';
-import { getBallColor } from '../../../utils/cricket-engine.ts';
+import { getBallColor } from '../@cricket/shared/cricket-engine.ts';
 
 export const MobileScorerLayout = ({
     match, engine, teams, battingTeam, bowlingTeam,

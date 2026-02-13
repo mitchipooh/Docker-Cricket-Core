@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { Organization, Sponsor, SponsorSettings } from '../../types.ts';
+import { Organization, Sponsor, SponsorSettings } from '@cricket/shared.ts';
 
 interface SponsorManagerProps {
     organization: Organization;

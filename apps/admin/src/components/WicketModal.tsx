@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { WicketType, Player } from '../../types.ts';
+import { WicketType, Player } from '@cricket/shared.ts';
 
 interface WicketModalProps {
   open: boolean;

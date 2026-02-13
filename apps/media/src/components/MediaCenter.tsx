@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MatchFixture, Team, MediaPost, PlayerWithContext, UserProfile, Organization, Standing } from '../../types.ts';
+import { MatchFixture, Team, MediaPost, PlayerWithContext, UserProfile, Organization, Standing } from '@cricket/shared.ts';
 import { MediaStudio } from './MediaStudio.tsx';
 import { MediaFeed } from './MediaFeed.tsx';
 import { NewsFeed } from './NewsFeed.tsx';

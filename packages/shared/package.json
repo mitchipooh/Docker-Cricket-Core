@@ -1,0 +1,22 @@
+{
+    "name": "@cricket/shared",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "main": "./types.ts",
+    "exports": {
+        ".": "./types.ts",
+        "./types": "./types.ts",
+        "./hooks/*": "./hooks/*.ts",
+        "./services/*": "./services/*.ts",
+        "./utils/*": "./utils/*.ts",
+        "./scoring/*": "./scoring/*.ts",
+        "./scoring/hooks/*": "./scoring/hooks/*.ts",
+        "./scoring/engines/*": "./scoring/engines/*.ts",
+        "./cricket-engine": "./utils/cricket-engine.ts",
+        "./commentaryGenerator": "./utils/commentaryGenerator.ts",
+        "./newsGenerator": "./utils/newsGenerator.ts",
+        "./pointsCalculator": "./utils/pointsCalculator.ts",
+        "./idGenerator": "./utils/idGenerator.ts"
+    }
+}

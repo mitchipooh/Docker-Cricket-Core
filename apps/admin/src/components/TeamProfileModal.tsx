@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Team, MatchFixture, Player } from '../../types.ts';
+import { Team, MatchFixture, Player } from '@cricket/shared.ts';
 import { EditTeamModal } from './EditTeamModal.tsx';
 
 interface TeamProfileModalProps {

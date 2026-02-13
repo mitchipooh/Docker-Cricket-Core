@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GameIssue, IssueType } from '../../types';
+import { GameIssue, IssueType } from '@cricket/shared';
 
 interface ProtestModalProps {
     isOpen: boolean;

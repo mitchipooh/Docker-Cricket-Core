@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Team, MatchFixture, TournamentFormat, Player, UserProfile } from '../../types.ts';
+import { Team, MatchFixture, TournamentFormat, Player, UserProfile } from '@cricket/shared.ts';
 
 interface MatchSetupProps {
   teams: Team[];

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { UserProfile, Team } from '../../types.ts';
+import { UserProfile, Team } from '@cricket/shared.ts';
 
 interface AddMemberModalProps {
     isOpen: boolean;

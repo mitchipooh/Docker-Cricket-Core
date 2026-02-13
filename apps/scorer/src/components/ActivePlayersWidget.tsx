@@ -1,5 +1,5 @@
 import React from 'react';
-import { MatchState, Team } from '../../types';
+import { MatchState, Team } from '@cricket/shared';
 
 interface ActivePlayersWidgetProps {
     state: MatchState;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { UserProfile } from '../../types.ts';
+import { UserProfile } from '@cricket/shared.ts';
 
 interface HRPortalProps {
   scorers: UserProfile[];

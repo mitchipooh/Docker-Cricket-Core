@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { MatchFixture } from '../../types.ts';
-import { generatePressKit } from '../../services/geminiService.ts';
+import { MatchFixture } from '@cricket/shared.ts';
+import { generatePressKit } from '@cricket/shared/services/geminiService.ts';
 
 interface MediaStudioProps {
   onBack: () => void;

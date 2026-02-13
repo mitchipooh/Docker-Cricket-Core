@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { MatchState, Team, Player } from '../../types.ts';
-import { getBattingStats, getBowlingStats } from '../../scoring/MatchSelectors.ts';
+import { MatchState, Team, Player } from '@cricket/shared.ts';
+import { getBattingStats, getBowlingStats } from '@cricket/shared/scoring/MatchSelectors.ts';
 import { calculateMVP } from '../scoring/logic/MVPCalculator.ts';
 import { buildBattingCard } from '../../scorer/scorecard/buildBattingCard.ts';
 import { buildBowlingCard } from '../../scorer/scorecard/buildBowlingCard.ts';

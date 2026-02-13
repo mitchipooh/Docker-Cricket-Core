@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { MatchState, Team } from '../../types.ts';
-import { getCoachInsights } from '../../services/geminiService.ts';
+import { MatchState, Team } from '@cricket/shared.ts';
+import { getCoachInsights } from '@cricket/shared/services/geminiService.ts';
 
 interface CoachCopilotProps {
   matchState: MatchState;

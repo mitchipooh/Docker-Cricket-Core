@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BallEvent } from '../../types';
+import { BallEvent } from '@cricket/shared';
 
 interface BallCorrectionModalProps {
     isOpen: boolean;

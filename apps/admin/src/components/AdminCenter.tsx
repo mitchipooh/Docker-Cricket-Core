@@ -5,8 +5,8 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Organization, MatchFixture, UserProfile, Team, Player, Tournament, TournamentFormat, PlayerWithContext, Group, MediaPost, OrgMember, GameIssue } from '../../types.ts';
-import { generateRoundRobin } from '../../utils/cricket-engine.ts';
+import { Organization, MatchFixture, UserProfile, Team, Player, Tournament, TournamentFormat, PlayerWithContext, Group, MediaPost, OrgMember, GameIssue } from '@cricket/shared.ts';
+import { generateRoundRobin } from '@cricket/shared/cricket-engine.ts';
 import { GlobalDashboard } from '../dashboard/GlobalDashboard.tsx';
 import { OrganizationView } from '../dashboard/OrganizationView.tsx';
 import { DEFAULT_POINTS_CONFIG, PRESET_TEST } from '../../competition/pointsEngine.ts';

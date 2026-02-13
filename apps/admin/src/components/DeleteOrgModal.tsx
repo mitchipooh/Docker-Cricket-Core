@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Organization } from '../../types.ts';
+import { Organization } from '@cricket/shared.ts';
 
 interface DeleteOrgModalProps {
   organization: Organization;

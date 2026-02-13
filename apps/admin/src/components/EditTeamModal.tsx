@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Team } from '../../types.ts';
+import { Team } from '@cricket/shared.ts';
 
 interface EditTeamModalProps {
     team: Team;

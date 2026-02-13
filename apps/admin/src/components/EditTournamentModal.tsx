@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Tournament } from '../../types.ts';
+import { Tournament } from '@cricket/shared.ts';
 
 interface EditTournamentModalProps {
     tournament: Tournament;

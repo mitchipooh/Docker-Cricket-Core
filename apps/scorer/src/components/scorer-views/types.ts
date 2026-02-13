@@ -1,10 +1,10 @@
-import { MatchFixture, Team, MatchState } from '../../../types';
-import { useMatchEngine } from '../../../scoring/hooks/useMatchEngine';
-import { useScoringPad } from '../../../scoring/hooks/useScoringPad';
-import { useWicketFlow } from '../../../scoring/hooks/useWicketFlow';
-import { useInningsOverRateTimer } from '../../../scoring/hooks/useInningsOverRateTimer';
-import { useDerivedStats } from '../../../scoring/hooks/useDerivedStats';
-import { useMatchRules } from '../../../scoring/hooks/useMatchRules';
+import { MatchFixture, Team, MatchState } from '../@cricket/shared';
+import { useMatchEngine } from '../@cricket/shared/scoring/hooks/useMatchEngine';
+import { useScoringPad } from '../@cricket/shared/scoring/hooks/useScoringPad';
+import { useWicketFlow } from '../@cricket/shared/scoring/hooks/useWicketFlow';
+import { useInningsOverRateTimer } from '../@cricket/shared/scoring/hooks/useInningsOverRateTimer';
+import { useDerivedStats } from '../@cricket/shared/scoring/hooks/useDerivedStats';
+import { useMatchRules } from '../@cricket/shared/scoring/hooks/useMatchRules';
 
 export interface ScorerLayoutProps {
     // Data

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Organization, MatchFixture, MediaPost, UserProfile, Team, GameIssue, MatchReportSubmission, UmpireMatchReport } from '@shared/types';
-import { useSync } from '@shared/hooks/useSync';
+import { Organization, MatchFixture, MediaPost, UserProfile, Team, GameIssue, MatchReportSubmission, UmpireMatchReport } from '@cricket/shared/types';
+import { useSync } from '@cricket/shared/hooks/useSync';
 
 interface DataContextType {
     orgs: Organization[];

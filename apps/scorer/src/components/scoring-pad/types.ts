@@ -1,5 +1,5 @@
-import { PadView } from '../../../scoring/hooks/useScoringPad';
-import { Player, Team } from '../../../types';
+import { PadView } from '../@cricket/shared/scoring/hooks/useScoringPad';
+import { Player, Team } from '../@cricket/shared';
 
 export interface ScoringPadProps {
     padView: PadView;

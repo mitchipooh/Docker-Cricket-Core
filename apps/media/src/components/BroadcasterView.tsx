@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { MatchState, Team } from '../../types.ts';
-import { getBattingStats, getBowlingStats } from '../../scoring/MatchSelectors.ts';
-import { useBallTimeline } from '../../scoring/hooks/useBallTimeline.ts';
+import { MatchState, Team } from '@cricket/shared.ts';
+import { getBattingStats, getBowlingStats } from '@cricket/shared/scoring/MatchSelectors.ts';
+import { useBallTimeline } from '@cricket/shared/scoring/hooks/useBallTimeline.ts';
 
 interface BroadcasterViewProps {
     matchState: MatchState;

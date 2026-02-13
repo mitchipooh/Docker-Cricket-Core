@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MatchFixture, Team, Organization, UserProfile, MediaPost, MatchState, BallEvent } from '../../types';
-import { getBallColor } from '../../utils/cricket-engine';
-import { generateCommentary, generateEndOfOverCommentary } from '../../utils/commentaryGenerator.ts';
-import { generateMatchNews } from '../../utils/newsGenerator.ts';
-import { useMatchEngine } from '../../scoring/hooks/useMatchEngine.ts';
-import { useScoringPad } from '../../scoring/hooks/useScoringPad.ts';
-import { useMatchRules } from '../../scoring/hooks/useMatchRules.ts';
-import { useDerivedStats } from '../../scoring/hooks/useDerivedStats.ts';
-import { useWicketFlow } from '../../scoring/hooks/useWicketFlow.ts';
-import { useInningsOverRateTimer } from '../../scoring/hooks/useInningsOverRateTimer.ts';
+import { MatchFixture, Team, Organization, UserProfile, MediaPost, MatchState, BallEvent } from '@cricket/shared';
+import { getBallColor } from '@cricket/shared/cricket-engine';
+import { generateCommentary, generateEndOfOverCommentary } from '@cricket/shared/commentaryGenerator';
+import { generateMatchNews } from '@cricket/shared/newsGenerator';
+import { useMatchEngine } from '@cricket/shared/scoring/hooks/useMatchEngine';
+import { useScoringPad } from '@cricket/shared/scoring/hooks/useScoringPad';
+import { useMatchRules } from '@cricket/shared/scoring/hooks/useMatchRules';
+import { useDerivedStats } from '@cricket/shared/scoring/hooks/useDerivedStats';
+import { useWicketFlow } from '@cricket/shared/scoring/hooks/useWicketFlow';
+import { useInningsOverRateTimer } from '@cricket/shared/scoring/hooks/useInningsOverRateTimer';
 
 // Views
 import { MobileScorerLayout } from './scorer-views/MobileScorerLayout.tsx';
@@ -28,9 +28,9 @@ import { PlayerEditModal } from '../modals/PlayerEditModal.tsx';
 import { BallCorrectionModal } from '../modals/BallCorrectionModal.tsx';
 import { CameraModal } from '../modals/CameraModal.tsx';
 import { OfficialsModal } from '../modals/OfficialsModal.tsx';
-import { checkEndOfInnings } from '../../scoring/engines/inningsEngine.ts';
+import { checkEndOfInnings } from '@cricket/shared/scoring/engines/inningsEngine.ts';
 import { generateMatchPDF } from './logic/generateMatchPDF.ts';
-import { useAudioCommentary } from '../../hooks/useAudioCommentary.ts';
+import { useAudioCommentary } from '@cricket/shared/hooks/useAudioCommentary.ts';
 import { AudioCommentaryToggle } from './AudioCommentaryToggle.tsx';
 import { AudioSettingsModal } from './AudioSettingsModal.tsx';
 interface ScorerProps {

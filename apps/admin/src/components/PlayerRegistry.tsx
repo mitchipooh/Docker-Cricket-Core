@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Player, Team, MatchFixture } from '../../types';
+import { Player, Team, MatchFixture } from '@cricket/shared';
 
 interface PlayerRegistryProps {
     allPlayers: Player[];

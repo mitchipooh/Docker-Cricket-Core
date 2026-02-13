@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { MatchState, Team } from '../../types.ts';
+import { MatchState, Team } from '@cricket/shared.ts';
 import { buildBattingCard } from '../../scorer/scorecard/buildBattingCard.ts';
 import { buildBowlingCard } from '../../scorer/scorecard/buildBowlingCard.ts';
 import { BattingScorecard } from './BattingScorecard.tsx';

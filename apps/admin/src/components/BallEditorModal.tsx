@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BallEvent, Team, WicketType } from '../../types.ts';
+import { BallEvent, Team, WicketType } from '@cricket/shared.ts';
 
 interface BallEditorModalProps {
   ball: BallEvent;

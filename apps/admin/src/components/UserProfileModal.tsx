@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { OrgMember, Organization } from '../../types.ts';
+import { OrgMember, Organization } from '@cricket/shared.ts';
 
 interface UserProfileModalProps {
     member: OrgMember | null;

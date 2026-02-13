@@ -5,9 +5,9 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { MatchState, Team, Sponsor, SponsorSettings } from '../../types.ts';
-import { getBattingStats, getBowlingStats } from '../../scoring/MatchSelectors.ts';
-import { useBallTimeline } from '../../scoring/hooks/useBallTimeline.ts';
+import { MatchState, Team, Sponsor, SponsorSettings } from '@cricket/shared.ts';
+import { getBattingStats, getBowlingStats } from '@cricket/shared/scoring/MatchSelectors.ts';
+import { useBallTimeline } from '@cricket/shared/scoring/hooks/useBallTimeline.ts';
 import { FullMatchScorecard } from './FullMatchScorecard.tsx';
 
 // Internal types for the window

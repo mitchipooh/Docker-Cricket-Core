@@ -1,4 +1,4 @@
-import { MatchState, TestMatchConfig } from '../../../types';
+import { MatchState, TestMatchConfig } from '../@cricket/shared';
 
 export const TEST_MATCH_DEFAULTS: TestMatchConfig = {
     maxDays: 5,

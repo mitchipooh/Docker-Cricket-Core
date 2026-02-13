@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Player, Team, MatchFixture } from '../../types';
+import { Player, Team, MatchFixture } from '@cricket/shared';
 
 interface SquadSelectorModalProps {
     isOpen: boolean;

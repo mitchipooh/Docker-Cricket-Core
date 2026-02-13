@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Scorer } from './components/Scorer';
 import { MatchSetup } from './components/MatchSetup';
 import { DataProvider, useData } from './contexts/DataProvider';
-import { MatchFixture } from '@shared/types';
+import { MatchFixture } from '@cricket/shared/types';
 import './index.css';
 
 const ScorerAppContent: React.FC = () => {

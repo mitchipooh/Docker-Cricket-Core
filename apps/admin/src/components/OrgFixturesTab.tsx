@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Organization, MatchFixture } from '../../../types';
+import { Organization, MatchFixture } from '../@cricket/shared';
 
 interface OrgFixturesTabProps {
     organization: Organization;

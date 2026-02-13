@@ -1,5 +1,5 @@
 import React from 'react';
-import { MatchFixture, Team, MatchState } from '../../types';
+import { MatchFixture, Team, MatchState } from '@cricket/shared';
 
 interface ScoreSummaryWidgetProps {
     match: MatchFixture;

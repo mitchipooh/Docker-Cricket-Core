@@ -1,5 +1,5 @@
 import React from 'react';
-import { MatchState } from '../../types';
+import { MatchState } from '@cricket/shared';
 
 interface TimelineWidgetProps {
     state: MatchState;

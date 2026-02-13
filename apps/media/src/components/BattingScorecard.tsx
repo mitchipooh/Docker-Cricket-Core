@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { InningsStats } from '../../types.ts';
+import { InningsStats } from '@cricket/shared.ts';
 
 export const BattingScorecard: React.FC<{ data: InningsStats }> = ({ data }) => {
   const { rows, extras, totalScore, overs, runRate, fow, didNotBat } = data;

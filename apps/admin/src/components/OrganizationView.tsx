@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Organization, UserProfile, PlayerWithContext, OrgMember, OrgApplication, Team, Player, MatchFixture } from '../../types.ts';
+import { Organization, UserProfile, PlayerWithContext, OrgMember, OrgApplication, Team, Player, MatchFixture } from '@cricket/shared.ts';
 import { Can } from '../common/Can.tsx';
 import { PlayerProfileModal } from '../modals/PlayerProfileModal.tsx';
 import { EditOrgModal } from '../modals/EditOrgModal.tsx';
@@ -11,7 +11,7 @@ import { AddMemberModal } from '../modals/AddMemberModal.tsx';
 import { GlobalTeamSearchModal } from '../modals/GlobalTeamSearchModal.tsx';
 import { EditTeamModal } from '../modals/EditTeamModal.tsx';
 import { EditTournamentModal } from '../modals/EditTournamentModal.tsx';
-import { Tournament } from '../../types.ts';
+import { Tournament } from '@cricket/shared.ts';
 import { CreateUserModal } from '../modals/CreateUserModal.tsx'; // NEW
 import { AccessControlPanel } from './org/AccessControlPanel.tsx';
 import { OrgSquadsTab } from './org/OrgSquadsTab.tsx';

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MatchReportSubmission, MatchFixture, PlayerWithContext } from '../../types';
+import { MatchReportSubmission, MatchFixture, PlayerWithContext } from '@cricket/shared';
 
 interface ReportVerificationProps {
     submission: MatchReportSubmission;

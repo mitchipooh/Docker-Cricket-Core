@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { UserProfile, Organization } from '../../types';
-import { generateId } from '../../utils/idGenerator';
+import { UserProfile, Organization } from '@cricket/shared';
+import { generateId } from '@cricket/shared/utils/idGenerator';
 
 interface CreateUserModalProps {
     isOpen: boolean;

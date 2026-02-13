@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Organization, UserProfile, MatchFixture, PlayerWithContext } from '../../types.ts';
+import { Organization, UserProfile, MatchFixture, PlayerWithContext } from '@cricket/shared.ts';
 import { OrgCard } from '../admin/OrgCard.tsx';
 import { Can } from '../common/Can.tsx';
 import { ApplicationModal } from '../modals/ApplicationModal.tsx';

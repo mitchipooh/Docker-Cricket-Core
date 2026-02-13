@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Organization, OrgMember, OrgApplication } from '../../types.ts';
+import { Organization, OrgMember, OrgApplication } from '@cricket/shared.ts';
 import { UserProfileModal } from './UserProfileModal.tsx';
 
 interface EditOrgModalProps {

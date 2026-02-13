@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Team } from '../../types';
-import { calculateDLSTarget } from '../../utils/cricket-engine.ts';
+import { Team } from '@cricket/shared';
+import { calculateDLSTarget } from '@cricket/shared/cricket-engine.ts';
 import { PitchView } from './PitchView.tsx';
 import { FieldView } from './FieldView.tsx';
 

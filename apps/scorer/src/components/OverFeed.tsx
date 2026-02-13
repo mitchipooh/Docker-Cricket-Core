@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MatchState, BallEvent, Team } from '../../types.ts';
+import { MatchState, BallEvent, Team } from '@cricket/shared.ts';
 import { BallEditorModal } from '../modals/BallEditorModal.tsx';
 
 interface OverFeedProps {

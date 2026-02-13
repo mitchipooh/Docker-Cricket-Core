@@ -3,7 +3,7 @@ import { useData } from '../../contexts/DataProvider';
 import { TournamentDashboard } from '../dashboard/TournamentDashboard';
 import { PlayerRegistry } from '../search/PlayerRegistry';
 import { OrganizationView } from '../dashboard/OrganizationView';
-import { Organization, Tournament, MatchFixture } from '../../types';
+import { Organization, Tournament, MatchFixture } from '@cricket/shared';
 
 export const EmbedViewer: React.FC = () => {
     const { orgs } = useData();

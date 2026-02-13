@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Tournament, MatchFixture, Team, Organization } from '../../types';
+import { Tournament, MatchFixture, Team, Organization } from '@cricket/shared';
 import { EditTournamentModal } from '../modals/EditTournamentModal.tsx';
 
 interface TournamentViewProps {

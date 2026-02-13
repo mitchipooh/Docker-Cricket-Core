@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Player } from '../../types.ts';
+import { Player } from '@cricket/shared.ts';
 
 interface NewBatterModalProps {
   isOpen: boolean;

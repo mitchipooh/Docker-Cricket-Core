@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { PointsConfig, BonusThreshold } from '../../types';
+import { PointsConfig, BonusThreshold } from '@cricket/shared';
 import { DEFAULT_POINTS_CONFIG, PRESET_T20, PRESET_TEST } from '../../competition/pointsEngine';
 
 interface PointsConfigSettingsProps {

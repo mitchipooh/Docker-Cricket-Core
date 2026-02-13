@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Player, Team, MatchFixture, PlayerMatchPerformance, MatchReportSubmission, UserProfile, GameIssue } from '../../types';
+import { Player, Team, MatchFixture, PlayerMatchPerformance, MatchReportSubmission, UserProfile, GameIssue } from '@cricket/shared';
 import { MatchReportForm } from './MatchReportForm.tsx';
 import { ProtestModal } from './ProtestModal.tsx';
 import { SquadSelectorModal } from './SquadSelectorModal';

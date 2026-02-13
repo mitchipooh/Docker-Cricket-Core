@@ -1,5 +1,5 @@
 import React from 'react';
-import { MatchFixture } from '../../types';
+import { MatchFixture } from '@cricket/shared';
 
 interface ScoringConflictModalProps {
     isOpen: boolean;

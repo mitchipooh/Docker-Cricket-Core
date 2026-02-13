@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TimelineBall } from '../../scoring/hooks/useBallTimeline.ts';
+import { TimelineBall } from '@cricket/shared/scoring/hooks/useBallTimeline.ts';
 
 interface BallTimelineProps {
   items: TimelineBall[];

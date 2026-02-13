@@ -1,5 +1,5 @@
 import React from 'react';
-import { Organization, Tournament } from '../../../types';
+import { Organization, Tournament } from '../@cricket/shared';
 
 interface OrgTournamentsTabProps {
     organization: Organization;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Organization, UserProfile } from '../../types.ts';
+import { Organization, UserProfile } from '@cricket/shared.ts';
 import { Can } from '../common/Can.tsx';
 
 interface OrgCardProps {

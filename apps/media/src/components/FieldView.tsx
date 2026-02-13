@@ -1,6 +1,6 @@
 
 import React, { useRef } from 'react';
-import { Coordinates } from '../../types.ts';
+import { Coordinates } from '@cricket/shared.ts';
 
 interface FieldViewProps {
   shots?: { coords: Coordinates; color?: string }[];

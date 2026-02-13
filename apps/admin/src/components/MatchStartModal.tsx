@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Player } from '../../types.ts';
+import { Player } from '@cricket/shared.ts';
 
 interface MatchStartModalProps {
   isOpen: boolean;

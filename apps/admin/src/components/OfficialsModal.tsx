@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserProfile } from '../../types.ts';
+import { UserProfile } from '@cricket/shared.ts';
 
 interface OfficialsModalProps {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Player } from '../../types.ts';
+import { Player } from '@cricket/shared.ts';
 
 interface EndOfOverModalProps {
   isOpen: boolean;

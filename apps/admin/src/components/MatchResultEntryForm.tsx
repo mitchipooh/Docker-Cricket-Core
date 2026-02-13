@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { MatchFixture, PointsConfig } from '../../types';
-import { calculatePointsForSide, MatchScoringPayload } from '../../utils/pointsCalculator';
+import { MatchFixture, PointsConfig } from '@cricket/shared';
+import { calculatePointsForSide, MatchScoringPayload } from '@cricket/shared/utils/pointsCalculator';
 
 import { DEFAULT_POINTS_CONFIG } from '../../competition/pointsEngine';
 

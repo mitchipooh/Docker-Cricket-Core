@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MatchFixture, Team, Organization, MatchState, Player, MediaPost } from '../../types';
+import { MatchFixture, Team, Organization, MatchState, Player, MediaPost } from '@cricket/shared';
 import { ScoreSummaryWidget } from './ScoreSummaryWidget.tsx';
 import { ActivePlayersWidget } from './ActivePlayersWidget.tsx';
 import { TimelineWidget } from './TimelineWidget.tsx';

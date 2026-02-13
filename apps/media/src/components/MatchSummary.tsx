@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { MatchFixture, Team } from '../../types';
-import { useDerivedStats } from '../../scoring/hooks/useDerivedStats';
+import { MatchFixture, Team } from '@cricket/shared';
+import { useDerivedStats } from '@cricket/shared/scoring/hooks/useDerivedStats';
 
 interface MatchSummaryProps {
     match: MatchFixture;

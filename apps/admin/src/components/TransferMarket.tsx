@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserProfile, Organization } from '../../types';
-import { searchPlayersForMarket } from '../../services/centralZoneService';
+import { UserProfile, Organization } from '@cricket/shared';
+import { searchPlayersForMarket } from '@cricket/shared/services/centralZoneService';
 
 interface TransferMarketProps {
     onBack: () => void;

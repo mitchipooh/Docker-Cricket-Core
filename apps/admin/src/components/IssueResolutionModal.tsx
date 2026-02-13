@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GameIssue } from '../../types';
+import { GameIssue } from '@cricket/shared';
 
 interface IssueResolutionModalProps {
     issue: GameIssue | null;

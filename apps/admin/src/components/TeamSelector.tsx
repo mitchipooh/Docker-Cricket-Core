@@ -1,5 +1,5 @@
 import React from 'react';
-import { Team } from '../../types';
+import { Team } from '@cricket/shared';
 
 interface TeamSelectorProps {
     teams: Team[];

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Organization, OrgMember } from '../../../types';
+import { Organization, OrgMember } from '../@cricket/shared';
 
 interface AccessControlPanelProps {
     organization: Organization;

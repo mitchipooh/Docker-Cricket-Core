@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { PlayerWithContext, Player, MatchFixture, BallEvent } from '../../types.ts';
+import { PlayerWithContext, Player, MatchFixture, BallEvent } from '@cricket/shared.ts';
 import { FieldView } from '../analytics/FieldView.tsx';
 import { PitchView } from '../analytics/PitchView.tsx';
 

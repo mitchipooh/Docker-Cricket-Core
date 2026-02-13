@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Coordinates } from '../../types.ts';
+import { Coordinates } from '@cricket/shared.ts';
 import { FieldView } from './FieldView.tsx';
 import { PitchView } from './PitchView.tsx';
-import { getBallColor } from '../../utils/cricket-engine.ts';
+import { getBallColor } from '@cricket/shared/cricket-engine.ts';
 
 interface ShotMapPanelProps {
     onSave: (pitch: Coordinates | undefined, shot: Coordinates | undefined, height: 'Ground' | 'Aerial' | undefined) => void;

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Team, Organization } from '../../types';
+import { Team, Organization } from '@cricket/shared';
 
 interface GlobalTeamSearchModalProps {
     isOpen: boolean;

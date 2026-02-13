@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UserProfile, Organization } from '../../types.ts';
+import { UserProfile, Organization } from '@cricket/shared.ts';
 
 interface CreateOrgModalProps {
   isOpen: boolean;

@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { InningsStats } from '../../types.ts';
+import { InningsStats } from '@cricket/shared.ts';
 import { BowlingCardRow, BattingCardRow } from '../../scorer/scorecard/types.ts';
-import { BallEvent } from '../../types.ts';
+import { BallEvent } from '@cricket/shared.ts';
 
 interface LinearScorebookProps {
    data: InningsStats & { bowlingRows?: BowlingCardRow[] };

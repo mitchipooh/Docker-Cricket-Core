@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Organization } from '../../types.ts';
+import { Organization } from '@cricket/shared.ts';
 
 interface ApplicationModalProps {
   isOpen: boolean;

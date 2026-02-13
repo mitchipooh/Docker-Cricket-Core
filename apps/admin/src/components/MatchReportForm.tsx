@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { MatchFixture, Team, PlayerMatchPerformance, MatchReportSubmission, Player } from '../../types';
+import { MatchFixture, Team, PlayerMatchPerformance, MatchReportSubmission, Player } from '@cricket/shared';
 
 interface MatchReportFormProps {
     fixture: MatchFixture;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tournament, Organization } from '../../types';
+import { Tournament, Organization } from '@cricket/shared';
 
 interface EmbedCodeModalProps {
     isOpen: boolean;
