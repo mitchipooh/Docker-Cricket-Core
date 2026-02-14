@@ -1,6 +1,6 @@
 import React from 'react';
 import { DEV_PROFILES } from './DevDataProfiles';
-import { useData } from '../../contexts/DataProvider';
+import { useData } from '@cricket/shared/contexts/DataProvider';
 
 export const DevTools: React.FC = () => {
     const { setOrgs, setStandaloneMatches } = useData();

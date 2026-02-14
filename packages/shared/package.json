@@ -15,6 +15,7 @@
         "./scoring/engines/*": "./scoring/engines/*.ts",
         "./competition/*": "./competition/*.ts",
         "./lib/*": "./lib/*.ts",
+        "./contexts/*": "./contexts/*.tsx",
         "./cricket-engine": "./utils/cricket-engine.ts",
         "./commentaryGenerator": "./utils/commentaryGenerator.ts",
         "./newsGenerator": "./utils/newsGenerator.ts",
@@ -22,11 +23,13 @@
         "./idGenerator": "./utils/idGenerator.ts"
     },
     "dependencies": {
-        "@supabase/supabase-js": "*",
-        "react": "*",
-        "react-dom": "*",
-        "lucide-react": "*",
-        "clsx": "*",
-        "tailwind-merge": "*"
+        "@supabase/supabase-js": "^2.39.0",
+        "lucide-react": "^0.294.0",
+        "clsx": "^2.1.0",
+        "tailwind-merge": "^2.2.0"
+    },
+    "peerDependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     }
 }

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useData } from '../../contexts/DataProvider';
+import { useData } from '@cricket/shared/contexts/DataProvider';
 import { TournamentDashboard } from '../dashboard/TournamentDashboard';
 import { PlayerRegistry } from '../search/PlayerRegistry';
 import { OrganizationView } from '../dashboard/OrganizationView';
