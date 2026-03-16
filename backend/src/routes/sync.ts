@@ -136,6 +136,14 @@ router.post('/sync/push', async (req, res) => {
         }
 
         await client.query('COMMIT');
+        
+        // Emit events for real-time updates
+        const io = (req as any).io;
+        if (io) {
+            io.emit('sync_push', { timestamp: Date.now() });
+            io.emit('fixture_update', { timestamp: Date.now() });
+        }
+
         res.json({ success: true });
     } catch (e) {
         await client.query('ROLLBACK');

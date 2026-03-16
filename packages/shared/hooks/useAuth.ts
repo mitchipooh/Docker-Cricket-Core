@@ -1,12 +1,9 @@
-/// <reference types="vite/client" />
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import type { User, Session } from '@supabase/supabase-js';
+import { apiFetch } from '../lib/api';
 import type { UserProfile } from '../types';
 
 export const useAuth = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [session, setSession] = useState<Session | null>(null);
+    const [user, setUser] = useState<any>(null);
     const [liteUser, setLiteUser] = useState<UserProfile | null>(() => {
         try {
             const saved = localStorage.getItem('cc_lite_user');
@@ -16,160 +13,84 @@ export const useAuth = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        return () => subscription.unsubscribe();
+        const savedUser = localStorage.getItem('cc_user_profile');
+        const token = localStorage.getItem('cc_auth_token');
+        if (savedUser && token) {
+            setUser(JSON.parse(savedUser));
+        }
+        setLoading(false);
     }, []);
 
     const signInWithHandle = async (handle: string, password: string) => {
         setLoading(true);
         try {
-            // 1. Look up email by handle
-            const { data, error } = await supabase
-                .from('user_profiles')
-                .select('email')
-                .eq('handle', handle)
-                .single();
-
-            if (error || !data || !data.email) {
-                return { error: { message: 'Invalid handle or user not found' } };
-            }
-
-            // 2. Sign in with the found email
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                email: data.email,
-                password
+            const data = await apiFetch('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ handle, password })
             });
 
-            if (authError) {
-                return { error: authError };
+            if (data.token) {
+                localStorage.setItem('cc_auth_token', data.token);
+                localStorage.setItem('cc_user_profile', JSON.stringify(data.user));
+                setUser(data.user);
+                return { data: data.user };
             }
-
-            return { data: authData.user };
-        } catch (e) {
+            return { error: { message: 'Login failed' } };
+        } catch (e: any) {
             return { error: e };
         } finally {
             setLoading(false);
         }
     };
 
-    const signInWithGoogle = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin
-            }
-        });
-        if (error) console.error('Google sign in error:', error);
-        return { error };
-    };
-
-    const signInWithFacebook = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'facebook',
-            options: {
-                redirectTo: window.location.origin
-            }
-        });
-        if (error) console.error('Facebook sign in error:', error);
-        return { error };
-    };
-
-    const signInWithEmail = async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
-        return { data, error };
-    };
-
     const signUpWithEmail = async (email: string, password: string, name: string) => {
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    name,
-                    handle: `@${email.split('@')[0]}`
-                }
-            }
-        });
-
-        // Create user profile
-        if (data.user && !error) {
-            await supabase.from('user_profiles').insert({
-                id: data.user.id,
-                email,
-                name,
-                handle: `@${email.split('@')[0]}`,
-                avatar_url: data.user.user_metadata.avatar_url || '',
-                role: 'Administrator'
+        setLoading(true);
+        try {
+            const handle = `@${email.split('@')[0]}`;
+            const data = await apiFetch('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({ email, password, name, handle })
             });
-        }
 
-        return { data, error };
+            if (data.token) {
+                localStorage.setItem('cc_auth_token', data.token);
+                localStorage.setItem('cc_user_profile', JSON.stringify(data.user));
+                setUser(data.user);
+                return { data: data.user };
+            }
+            return { error: { message: 'Registration failed' } };
+        } catch (e: any) {
+            return { error: e };
+        } finally {
+            setLoading(false);
+        }
     };
 
     const signOut = async () => {
         setLiteUser(null);
+        setUser(null);
         localStorage.removeItem('cc_lite_user');
-        const { error } = await supabase.auth.signOut();
-        return { error };
+        localStorage.removeItem('cc_auth_token');
+        localStorage.removeItem('cc_user_profile');
+        return { error: null };
     };
 
     const getUserProfile = async (): Promise<UserProfile | null> => {
-        // Priority to Lite User (Internal Handles)
         if (liteUser) return liteUser;
-
-        // Fallback to Supabase User
-        if (!user) return null;
-
-        const { data, error } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-        if (error) {
-            console.error('Error fetching user profile:', error);
-            return null;
-        }
-
-        // Map Supabase profile to UserProfile type
-        return {
-            id: data.id,
-            name: data.name || user.email || 'User',
-            handle: data.handle || `@${user.email?.split('@')[0]}`,
-            email: data.email || user.email,
-            avatarUrl: data.avatar_url || user.user_metadata.avatar_url,
-            role: data.role || 'Fan',
-            createdAt: new Date(data.created_at).getTime()
-        };
+        return user;
     };
 
     return {
         user,
-        session,
         liteUser,
         loading,
-        signInWithGoogle,
-        signInWithFacebook,
-        signInWithEmail,
         signInWithHandle,
         signUpWithEmail,
         signOut,
-        getUserProfile
+        getUserProfile,
+        // Mocking OAuth for now as it's not implemented on the local backend
+        signInWithGoogle: async () => ({ error: { message: 'Google Login not available in local mode' } }),
+        signInWithFacebook: async () => ({ error: { message: 'Facebook Login not available in local mode' } }),
+        signInWithEmail: async (email: string, password: string) => signInWithHandle(email, password)
     };
 };
