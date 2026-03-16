@@ -1,4 +1,6 @@
+/// <reference types="vite/client" />
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('cc_auth_token');

@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { MatchFixture, MediaPost, Comment, Team, InningsStats, Organization, UserProfile } from '@cricket/shared';
-import { FullMatchScorecard } from '../display/FullMatchScorecard';
-import { CameraModal } from '../modals/CameraModal';
-import { buildBattingCard } from '../../scorer/scorecard/buildBattingCard';
-import { buildBowlingCard } from '../../scorer/scorecard/buildBowlingCard';
+import { FullMatchScorecard } from './FullMatchScorecard';
+import { CameraModal } from './CameraModal';
+import { buildBattingCard } from '@cricket/shared/scoring/scorecard/scorecard/buildBattingCard';
+import { buildBowlingCard } from '@cricket/shared/scoring/scorecard/scorecard/buildBowlingCard';
 
 interface MediaFeedProps {
    fixtures: MatchFixture[];

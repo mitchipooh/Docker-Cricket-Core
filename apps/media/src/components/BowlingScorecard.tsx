@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BowlingCardRow } from '../../scorer/scorecard/types';
+import { BowlingCardRow } from '@cricket/shared/scoring/scorecard/scorecard/types';
 
 export const BowlingScorecard: React.FC<{ rows: BowlingCardRow[] }> = ({ rows }) => {
   return (

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useData } from '@cricket/shared/contexts/DataProvider';
-import { TournamentDashboard } from '../dashboard/TournamentDashboard';
-import { PlayerRegistry } from '../search/PlayerRegistry';
-import { OrganizationView } from '../dashboard/OrganizationView';
+import { TournamentDashboard } from './TournamentDashboard';
+import { PlayerRegistry } from './PlayerRegistry';
+import { OrganizationView } from './OrganizationView';
 import { Organization, Tournament, MatchFixture } from '@cricket/shared';
 
 export const EmbedViewer: React.FC = () => {

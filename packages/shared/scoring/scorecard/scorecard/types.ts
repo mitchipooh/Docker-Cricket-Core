@@ -1,5 +1,5 @@
 
-import { BallEvent } from '../../types.ts';
+import { BallEvent } from '@cricket/shared';
 
 export interface BattingCardRow {
   playerId: string;

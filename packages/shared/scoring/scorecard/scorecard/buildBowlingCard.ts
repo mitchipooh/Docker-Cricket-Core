@@ -1,7 +1,6 @@
-
-import { BallEvent, Player } from '../../types.ts';
-import { isLegalBall, getOverString } from '../../utils/cricket-engine.ts';
-import { BowlingCardRow } from './types.ts';
+import { BallEvent, Player } from '@cricket/shared';
+import { isLegalBall, getOverString } from '@cricket/shared/cricket-engine';
+import { BowlingCardRow } from './types';
 
 export function buildBowlingCard(
   history: BallEvent[],

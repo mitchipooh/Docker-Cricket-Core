@@ -25,7 +25,8 @@
         "paths": {
             "@cricket/shared/*": [
                 "./*"
-            ]
+            ],
+            "types": ["vite/client"]
         }
     },
     "include": [

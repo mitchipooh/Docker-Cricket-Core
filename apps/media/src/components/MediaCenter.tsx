@@ -9,7 +9,7 @@ import { MatchFixture, Team, MediaPost, PlayerWithContext, UserProfile, Organiza
 import { MediaStudio } from './MediaStudio';
 import { MediaFeed } from './MediaFeed';
 import { NewsFeed } from './NewsFeed';
-import { PointsTable } from '../display/PointsTable';
+import { PointsTable } from '@cricket/shared/competition/PointsTable';
 import { buildPointsTable } from '@cricket/shared/competition/buildPointsTable';
 import { CompletedMatch, MatchResult } from '@cricket/shared/competition/types';
 

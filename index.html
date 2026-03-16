@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket-Core 2026 | Local Development Portal</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #3b82f6;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+        }
+        .portal-container {
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p {
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+        }
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+        .app-card {
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .app-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        }
+        .app-card h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1.5rem;
+        }
+        .app-card span {
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .app-card p {
+            font-size: 0.9rem;
+            margin: 1rem 0 0;
+            height: auto;
+        }
+        .badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-container">
+        <h1>Cricket-Core 2026</h1>
+        <p>Local Development Workspace</p>
+        
+        <div class="app-grid">
+            <a href="http://localhost:5174" class="app-card" target="_blank">
+                <div class="badge">Port 5174</div>
+                <h2>Admin Hub</h2>
+                <span>Development</span>
+                <p>Manage tournaments, teams, and organizers.</p>
+            </a>
+            
+            <a href="http://localhost:5173" class="app-card" target="_blank">
+                <div class="badge">Port 5173</div>
+                <h2>Scorer App</h2>
+                <span>Development</span>
+                <p>Real-time match scoring and live updates.</p>
+            </a>
+            
+            <a href="http://localhost:5175" class="app-card" target="_blank">
+                <div class="badge">Port 5175</div>
+                <h2>Media Hub</h2>
+                <span>Development</span>
+                <p>Public feed, statistics, and fan hub.</p>
+            </a>
+            
+            <a href="http://localhost:3001/api/health" class="app-card" target="_blank">
+                <div class="badge">Port 3001</div>
+                <h2>API Backend</h2>
+                <span>Node.js</span>
+                <p>Core logic, WebSockets, and database sync.</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

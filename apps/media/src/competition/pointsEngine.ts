@@ -1,5 +1,5 @@
 
-import { MatchResult } from './types';
+import { MatchResult } from '@cricket/shared/competition/types';
 import { PointsConfig } from '@cricket/shared';
 
 export const PRESET_TEST: PointsConfig = {

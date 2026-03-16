@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { MatchState, Team } from '@cricket/shared';
-import { buildBattingCard } from '../../scorer/scorecard/buildBattingCard';
-import { buildBowlingCard } from '../../scorer/scorecard/buildBowlingCard';
+import { buildBattingCard } from '@cricket/shared/scoring/scorecard/scorecard/buildBattingCard';
+import { buildBowlingCard } from '@cricket/shared/scoring/scorecard/scorecard/buildBowlingCard';
 import { BattingScorecard } from './BattingScorecard';
 import { BowlingScorecard } from './BowlingScorecard';
-import { LinearScorebook } from '@cricket/shared/scoring/LinearScorebook';
+import { LinearScorebook } from './LinearScorebook';
 
 interface FullMatchScorecardProps {
   matchState: MatchState;

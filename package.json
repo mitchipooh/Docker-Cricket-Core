@@ -11,6 +11,11 @@
   "homepage": "https://cricketcorepro.com",
   "scripts": {
     "dev": "vite",
+    "dev:admin": "npm run dev -w apps/admin",
+    "dev:media": "npm run dev -w apps/media",
+    "dev:scorer": "npm run dev -w apps/scorer",
+    "dev:backend": "npm run dev -w backend",
+    "dev:all": "npm run dev:backend & npm run dev:admin & npm run dev:media & npm run dev:scorer",
     "build": "npm run build -w apps/admin -w apps/media -w apps/scorer -w backend",
     "lint": "eslint .",
     "preview": "vite preview",

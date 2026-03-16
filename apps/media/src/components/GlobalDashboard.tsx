@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Organization, UserProfile, MatchFixture, PlayerWithContext } from '@cricket/shared';
-import { OrgCard } from '../admin/OrgCard';
-import { Can } from '../common/Can';
-import { ApplicationModal } from '../modals/ApplicationModal';
+import { OrgCard } from '../../../admin/src/components/OrgCard';
+import { Can } from '../../../scorer/src/components/common/Can';
+import { ApplicationModal } from '../../../admin/src/components/ApplicationModal';
 
 interface GlobalDashboardProps {
   organizations: Organization[];

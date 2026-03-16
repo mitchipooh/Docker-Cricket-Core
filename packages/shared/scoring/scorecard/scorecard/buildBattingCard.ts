@@ -1,6 +1,5 @@
-
-import { BallEvent, Player, InningsStats, ExtrasBreakdown, FallOfWicket, BattingCardRow } from '../../types.ts';
-import { isLegalBall, getOverString } from '../../utils/cricket-engine.ts';
+import { BallEvent, Player, InningsStats, ExtrasBreakdown, FallOfWicket, BattingCardRow } from '@cricket/shared';
+import { isLegalBall, getOverString } from '@cricket/shared/cricket-engine';
 
 export function buildBattingCard(
   history: BallEvent[],

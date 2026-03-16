@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Coordinates } from '@cricket/shared';
 import { FieldView } from './FieldView';
 import { PitchView } from './PitchView';
-import { getBallColor } from '@cricket/shared';
+import { getBallColor } from '@cricket/shared/cricket-engine';
 
 interface ShotEntryModalProps {
   isOpen: boolean;

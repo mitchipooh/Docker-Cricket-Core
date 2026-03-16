@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { BallEvent, Team, Coordinates } from '@cricket/shared';
 import { PitchView } from './PitchView';
 import { FieldView } from './FieldView';
-import { getBallColor } from '@cricket/shared';
+import { getBallColor } from '@cricket/shared/cricket-engine';
 
 interface AdvancedAnalysisProps {
     history: BallEvent[];

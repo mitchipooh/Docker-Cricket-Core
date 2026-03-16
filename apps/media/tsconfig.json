@@ -8,7 +8,8 @@
             ],
             "@cricket/shared/*": [
                 "../../packages/shared/*"
-            ]
+            ],
+            "types": ["vite/client"]
         }
     },
     "include": [
