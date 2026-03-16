@@ -1,6 +1,5 @@
 import React from 'react';
-import { Header } from './components/Header';
-import { AdminDashboard } from './components/AdminDashboard';
+import { Header, AdminDashboard } from './components';
 import { useAuth } from '@cricket/shared/hooks/useAuth';
 
 const App: React.FC = () => {
