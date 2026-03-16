@@ -11,7 +11,7 @@
   "homepage": "https://cricketcorepro.com",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run build -w apps/admin -w apps/media -w apps/scorer -w backend",
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
